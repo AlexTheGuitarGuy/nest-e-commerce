@@ -10,14 +10,14 @@ export type User = {
 @Injectable()
 export class UsersService {
   private readonly users: User[] = [
-    { id: 1, username: 'John Doe', password: 'test', roles: [Role.User] },
+    { id: 1, username: 'John Doe', password: 'test', roles: [Role.Customer] },
     {
       id: 2,
       username: 'Alice Caeiro',
       password: 'changeme',
       roles: [Role.Admin],
     },
-    { id: 3, username: 'Who Knows', password: '1234', roles: [Role.User] },
+    { id: 3, username: 'Who Knows', password: '1234', roles: [Role.Customer] },
   ];
 
   findOneByUsername(username: string): Observable<User | undefined> {
