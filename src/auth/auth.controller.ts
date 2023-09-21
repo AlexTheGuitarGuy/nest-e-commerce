@@ -12,7 +12,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Public()
   @Post('login')
-  async login(@Request() req: RequestType) {
+  login(@Request() req: RequestType) {
     return this._authService.login(req['user']);
   }
 
