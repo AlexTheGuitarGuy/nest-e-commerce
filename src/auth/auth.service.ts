@@ -1,7 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Observable, map, switchMap, from } from 'rxjs';
-import { UsersService } from 'src/users/users.service';
+import { Observable, map } from 'rxjs';
+import { User, UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -10,18 +10,21 @@ export class AuthService {
     private readonly _jwtService: JwtService,
   ) {}
 
-  signIn(
+  validateUser(
     username: string,
     password: string,
-  ): Observable<{ access_token: string }> {
+  ): Observable<Pick<User, 'username' | 'id'> | null> {
     return this._usersService.findOneByUsername(username).pipe(
-      switchMap((user) => {
-        if (user.password !== password) throw new UnauthorizedException();
-        const payload = { sub: user.id, username: user.name };
-        return from(this._jwtService.signAsync(payload)).pipe(
-          map((access_token) => ({ access_token })),
-        );
+      map((user) => {
+        if (!user || user.password !== password) return null;
+        const { password: pass, ...result } = user;
+        return result;
       }),
     );
+  }
+
+  login(user: User) {
+    const payload = { username: user.username, sub: user.id };
+    return { access_token: this._jwtService.sign(payload) };
   }
 }
