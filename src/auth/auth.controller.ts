@@ -3,7 +3,9 @@ import { Request as RequestType } from 'supertest';
 import { LocalAuthGuard } from './local-auth.guard';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { Public } from 'src/decorators/public.decorator';
+import { Public } from './decorators/public.decorator';
+import { Role } from 'src/enums/role.enum';
+import { Roles } from './decorators/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -17,6 +19,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Roles(Role.Admin)
   @Get('profile')
   getProfile(@Request() req: RequestType) {
     return req['user'];

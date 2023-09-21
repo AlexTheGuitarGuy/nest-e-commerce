@@ -14,7 +14,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   async validate(
     username: string,
     password: string,
-  ): Promise<Pick<User, 'username' | 'id'>> {
+  ): Promise<Omit<User, 'password'>> {
     return await firstValueFrom(
       this._authService.validateUser(username, password).pipe(
         map((user) => {
