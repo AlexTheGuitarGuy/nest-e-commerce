@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsString,
   Matches,
@@ -7,10 +8,12 @@ import {
   MinLength,
 } from 'class-validator';
 import { Role } from 'src/enums/role.enum';
+import { Unique } from 'typeorm';
 
 export class CreateUserDto {
   @IsNotEmpty()
   @IsEmail()
+  @Unique(['email'])
   email!: string;
 
   @IsString()
@@ -23,13 +26,15 @@ export class CreateUserDto {
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d[\]{};:=<>_+^#$@!%*?&]{8,100}$/,
     {
       message:
-        'A password at least contains one digit, one uppercase letter and one lowercase letter',
+        'A password contains at least one digit, one uppercase letter and one lowercase letter',
     },
   )
   password!: string;
 
   @IsString()
+  @Unique(['username'])
   username!: string;
 
+  @IsEnum(Role)
   role!: Role;
 }

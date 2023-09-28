@@ -11,6 +11,7 @@ import {
   Delete,
   NotFoundException,
   HttpStatus,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -26,7 +27,7 @@ export class UsersController {
 
   @Post()
   @Roles(Role.Admin)
-  create(@Body() createUserDto: CreateUserDto) {
+  create(@Body(ValidationPipe) createUserDto: CreateUserDto) {
     return this._usersService.create(createUserDto);
   }
 
