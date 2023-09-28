@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Observable, from, switchMap, map, of } from 'rxjs';
+import { Observable, from, switchMap, map, of, forkJoin } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -14,6 +14,7 @@ import { UserDto } from '../dto/user.dto';
 import { UserEntity } from '../entities/user.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { PostgresErrorCode } from 'src/enums/postgres-error-code.enum';
+import { Role } from 'src/enums/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -22,11 +23,31 @@ export class UsersService {
     private readonly _usersRepository: Repository<UserEntity>,
   ) {}
 
-  create(data: CreateUserDto): Observable<UserDto> {
-    const { password, ...rest } = data;
+  create(createUserDto: CreateUserDto): Observable<UserDto> {
+    const { password, ...rest } = createUserDto;
 
     return from(bcrypt.hash(password, 10)).pipe(
       switchMap((hashedPassword) => {
+        return forkJoin([
+          of(hashedPassword),
+          this._usersRepository.findOne({
+            where: { email: createUserDto.email },
+          }),
+          this._usersRepository.findOne({
+            where: { username: createUserDto.username },
+          }),
+        ]);
+      }),
+      switchMap(([hashedPassword, userWithSameEmail, userWithSameUsername]) => {
+        if (!!userWithSameEmail)
+          throw new BadRequestException('This email is already in use');
+
+        if (!!userWithSameUsername)
+          throw new BadRequestException('This username is already in use');
+
+        if (!Object.values(Role).includes(createUserDto.role))
+          throw new BadRequestException('This role does not exist');
+
         const user = this._usersRepository.create({
           ...rest,
           password: hashedPassword,
