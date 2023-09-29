@@ -8,12 +8,10 @@ import {
   MinLength,
 } from 'class-validator';
 import { Role } from 'src/enums/role.enum';
-import { Unique } from 'typeorm';
 
 export class CreateUserDto {
   @IsNotEmpty()
   @IsEmail()
-  @Unique(['email'])
   email!: string;
 
   @IsString()
@@ -32,7 +30,6 @@ export class CreateUserDto {
   password!: string;
 
   @IsString()
-  @Unique(['username'])
   username!: string;
 
   @IsEnum(Role)

@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Observable, from, switchMap, map, of } from 'rxjs';
+import { Observable, from, switchMap, map, of, catchError } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -33,6 +33,9 @@ export class UsersService {
         });
 
         return from(this._usersRepository.save(user));
+      }),
+      catchError((error: any) => {
+        throw new BadRequestException(error.detail);
       }),
       map((user) => plainToInstance(UserDto, user)),
     );
