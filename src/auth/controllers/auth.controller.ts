@@ -2,18 +2,20 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Post,
-  Request,
+  Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { Request as RequestType } from 'supertest';
+import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { Role } from 'src/enums/role.enum';
-import { Roles } from '../decorators/roles.decorator';
 import { Public } from '../decorators/public.decorator';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UserDto } from 'src/users/dto/user.dto';
+import dayjs from 'dayjs';
 
 @Controller('auth')
 export class AuthController {
@@ -22,8 +24,25 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Public()
   @Post('login')
-  login(@Request() req: RequestType) {
-    return this._authService.login(req['user']);
+  login(@Req() req: Request, @Res() res: Response) {
+    const { access_token } = this._authService.login(req.user as UserDto);
+
+    res
+      .cookie('access_token', access_token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        expires: dayjs().add(1, 'day').toDate(),
+      })
+      .send({ status: HttpStatus.OK, message: 'Login successful' });
+  }
+
+  @Post('logout')
+  logout(@Res() res: Response) {
+    res.clearCookie('access_token').send({
+      status: HttpStatus.OK,
+      message: 'Logout successful',
+    });
   }
 
   @Post('register')
@@ -32,9 +51,8 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Roles(Role.Admin)
   @Get('profile')
-  getProfile(@Request() req: RequestType) {
-    return req['user'];
+  getProfile(@Req() req: Request) {
+    return req.user;
   }
 }

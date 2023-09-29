@@ -5,7 +5,7 @@ import { Role } from 'src/enums/role.enum';
 export class UserDto {
   @IsNotEmpty()
   @IsString()
-  id!: string;
+  id!: number;
 
   @IsNotEmpty()
   @IsEmail()

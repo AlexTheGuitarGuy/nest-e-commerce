@@ -19,7 +19,7 @@ export class AuthService {
   login(user: UserDto) {
     const payload = { ...user, sub: user.id, password: void 0 };
 
-    return { access_token: `Bearer ${this._jwtService.sign(payload)}` };
+    return { access_token: this._jwtService.sign(payload) };
   }
 
   register(data: CreateUserDto) {
