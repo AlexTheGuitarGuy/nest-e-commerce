@@ -111,6 +111,9 @@ export class UsersService {
           throw new InternalServerErrorException('Failed to update user');
         }
       }),
+      catchError((error: any) => {
+        throw new BadRequestException(error.detail);
+      }),
       map((user) => plainToInstance(UserDto, user)),
     );
   }

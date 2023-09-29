@@ -11,7 +11,10 @@ import {
   Delete,
   NotFoundException,
   HttpStatus,
+  Request,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { Request as RequestType } from 'supertest';
 import { UsersService } from '../services/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserDto } from '../dto/user.dto';
@@ -47,17 +50,19 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles(Role.Customer, Role.Admin)
   findOneById(@Param('id', ParseIntPipe) id: number): Observable<UserDto> {
     return this._usersService.findOneById(id);
   }
 
   @Patch(':id')
-  @UseInterceptors(ClassSerializerInterceptor)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
+    @Request() req: RequestType,
   ) {
+    if (req['user'].id !== id && req['user'].role !== Role.Admin)
+      throw new UnauthorizedException();
+
     return this._usersService.updateOne(id, updateUserDto);
   }
 
