@@ -31,14 +31,12 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(Role.Customer, Role.Admin)
   @UseInterceptors(ClassSerializerInterceptor)
   findAll(): Observable<UserDto[]> {
     return this._usersService.findAll();
   }
 
   @Get('username')
-  @Roles(Role.Customer, Role.Admin)
   @UseInterceptors(ClassSerializerInterceptor)
   findOneByUsername(
     @Body() body: { username: string },
@@ -48,8 +46,13 @@ export class UsersController {
     return this._usersService.findOneByUsername(body.username);
   }
 
-  @Patch(':id')
+  @Get(':id')
   @Roles(Role.Customer, Role.Admin)
+  findOneById(@Param('id', ParseIntPipe) id: number): Observable<UserDto> {
+    return this._usersService.findOneById(id);
+  }
+
+  @Patch(':id')
   @UseInterceptors(ClassSerializerInterceptor)
   update(
     @Param('id', ParseIntPipe) id: number,

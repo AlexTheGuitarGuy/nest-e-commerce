@@ -57,7 +57,7 @@ export class UsersService {
     );
   }
 
-  findOneById(id: number): Observable<UserDto | undefined> {
+  findOneById(id: number): Observable<UserDto> {
     return from(this._usersRepository.findOne({ where: { id } })).pipe(
       map((found) => {
         if (!found) {
