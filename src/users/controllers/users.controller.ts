@@ -13,15 +13,20 @@ import {
   Req,
   UnauthorizedException,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { UsersService } from '../services/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserDto } from '../dto/user.dto';
 import { Observable, map } from 'rxjs';
-import { Role } from 'src/enums/role.enum';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { PageDto } from 'src/common/dto/page.dto';
+import { plainToInstance } from 'class-transformer';
+import { PageMetaDto } from 'src/common/dto/page-meta.dto';
+import { PageOptionsDto } from 'src/common/dto/page-options-dto';
 
 @Controller('users')
 export class UsersController {
@@ -35,8 +40,22 @@ export class UsersController {
 
   @Get()
   @UseInterceptors(ClassSerializerInterceptor)
-  findAll(): Observable<UserDto[]> {
-    return this._usersService.findAll();
+  findAll(
+    @Query() pageOptionsDto: PageOptionsDto,
+  ): Observable<PageDto<UserDto>> {
+    const { take, skip } = pageOptionsDto;
+    return this._usersService.findMany({}, {}, {}, take, skip).pipe(
+      map(({ items, itemsCount }) => {
+        const products = items.map((product) =>
+          plainToInstance(UserDto, product),
+        );
+
+        return new PageDto(
+          products,
+          new PageMetaDto({ itemCount: itemsCount, pageOptionsDto }),
+        );
+      }),
+    );
   }
 
   @Get('username')
@@ -44,8 +63,6 @@ export class UsersController {
   findOneByUsername(
     @Body() body: { username: string },
   ): Observable<UserDto | undefined> {
-    console.log('username', body.username);
-
     return this._usersService.findOneByUsername(body.username);
   }
 

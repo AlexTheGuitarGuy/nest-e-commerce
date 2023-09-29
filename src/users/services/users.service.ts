@@ -7,13 +7,18 @@ import {
 import { Observable, from, switchMap, map, of, catchError, tap } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import {
+  FindOptionsRelations,
+  FindOptionsSelect,
+  FindOptionsWhere,
+  Repository,
+} from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserDto } from '../dto/user.dto';
 import { UserEntity } from '../entities/user.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { PostgresErrorCode } from 'src/enums/postgres-error-code.enum';
+import { PostgresErrorCode } from 'src/common/enums/postgres-error-code.enum';
 
 @Injectable()
 export class UsersService {
@@ -41,9 +46,36 @@ export class UsersService {
     );
   }
 
-  findAll(): Observable<UserDto[]> {
-    return from(this._usersRepository.find({ take: 999 })).pipe(
-      map((users) => plainToInstance(UserDto, users)),
+  findMany(
+    where: FindOptionsWhere<UserEntity>,
+    relations: FindOptionsRelations<UserEntity>,
+    select: FindOptionsSelect<UserEntity>,
+    take: number = 50,
+    skip: number = 0,
+  ): Observable<{ items: UserEntity[]; itemsCount: number }> {
+    return from(
+      this._usersRepository.findAndCount({
+        where,
+        relations,
+        select: { ...select },
+        take,
+        skip,
+      }),
+    ).pipe(
+      map(([items, itemsCount]) => {
+        console.log('items', items);
+
+        const logPayload = {
+          where,
+          relations,
+          select,
+        };
+        if (items.length) {
+          Object.assign(logPayload, { ids: items.map((e) => e.id) });
+        }
+
+        return { items, itemsCount };
+      }),
     );
   }
 

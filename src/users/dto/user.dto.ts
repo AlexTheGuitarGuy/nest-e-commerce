@@ -1,10 +1,9 @@
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
-import { Role } from 'src/enums/role.enum';
+import { Role } from 'src/common/enums/role.enum';
 
 export class UserDto {
   @IsNotEmpty()
-  @IsString()
   id!: number;
 
   @IsNotEmpty()
