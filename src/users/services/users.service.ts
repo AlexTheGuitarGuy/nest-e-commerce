@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Observable, from, switchMap, map, of, catchError } from 'rxjs';
+import { Observable, from, switchMap, map, of, catchError, tap } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -48,7 +48,13 @@ export class UsersService {
   }
 
   remove(id: number): Observable<any> {
-    return from(this._usersRepository.delete(id));
+    return from(this._usersRepository.delete(id)).pipe(
+      tap((deleted) => {
+        if (deleted.affected === 0) {
+          throw new NotFoundException(`User with id ${id} not found`);
+        }
+      }),
+    );
   }
 
   findOneByUsername(username: string): Observable<UserDto | undefined> {
