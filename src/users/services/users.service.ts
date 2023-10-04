@@ -79,7 +79,7 @@ export class UsersService {
     );
   }
 
-  remove(id: number): Observable<any> {
+  removeOne(id: number): Observable<any> {
     return from(this._usersRepository.delete(id)).pipe(
       tap((deleted) => {
         if (deleted.affected === 0) {
@@ -124,7 +124,7 @@ export class UsersService {
     return from(this._usersRepository.findOne({ where: { id } })).pipe(
       map((found) => {
         if (!found) {
-          throw new NotFoundException(`User not found`);
+          throw new NotFoundException(`User with id ${id} not found`);
         }
         return found;
       }),

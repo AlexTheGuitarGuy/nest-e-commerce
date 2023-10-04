@@ -91,7 +91,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+  removeOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     if (
       (req.user as UserDto).id !== id &&
       (req.user as UserDto).role !== Role.Admin
@@ -102,7 +102,7 @@ export class UsersController {
         throw new UnauthorizedException();
     }
 
-    return this._usersService.remove(id).pipe(
+    return this._usersService.removeOne(id).pipe(
       map(() => {
         return { status: HttpStatus.OK };
       }),

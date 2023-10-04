@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProductEntity } from '../entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -7,7 +12,12 @@ import {
   FindOptionsWhere,
   Repository,
 } from 'typeorm';
-import { Observable, from, map } from 'rxjs';
+import { Observable, catchError, from, map, switchMap, tap } from 'rxjs';
+import { CreateProductDto } from '../dto/create-product.dto';
+import { plainToClass, plainToInstance } from 'class-transformer';
+import { UpdateProductDto } from '../dto/update-produtct.dto';
+import { PostgresErrorCode } from 'src/common/enums/postgres-error-code.enum';
+import { ProductDto } from '../dto/product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -45,5 +55,58 @@ export class ProductsService {
         return { items, itemsCount };
       }),
     );
+  }
+
+  create(createProductDto: CreateProductDto) {
+    const product = this._productsRepository.create(createProductDto);
+    return from(this._productsRepository.save(product)).pipe(
+      catchError((error: any) => {
+        throw new BadRequestException(error.detail);
+      }),
+      map((product) => plainToClass(ProductEntity, product)),
+    );
+  }
+
+  updateOne(id: number, updateProductDto: UpdateProductDto) {
+    return from(this._productsRepository.findOne({ where: { id } })).pipe(
+      map((found) => {
+        if (!found) {
+          throw new NotFoundException(`Product with id ${id} not found`);
+        }
+        return found;
+      }),
+      switchMap((found) => {
+        try {
+          const updated = this._productsRepository.merge(
+            found,
+            updateProductDto,
+          );
+          return from(this._productsRepository.save(updated));
+        } catch (error: any) {
+          if (error?.code === PostgresErrorCode.UniqueViolation) {
+            throw new BadRequestException('This product already exists');
+          }
+          throw new InternalServerErrorException('Failed to update product');
+        }
+      }),
+      catchError((error: any) => {
+        throw new BadRequestException(error.detail);
+      }),
+      map((product) => plainToInstance(ProductDto, product)),
+    );
+  }
+
+  removeOne(id: number) {
+    return from(this._productsRepository.delete(id)).pipe(
+      tap((deleted) => {
+        if (deleted.affected === 0) {
+          throw new NotFoundException(`Product with id ${id} not found`);
+        }
+      }),
+    );
+  }
+
+  findOneById(id: number) {
+    return from(this._productsRepository.findOne({ where: { id } }));
   }
 }
