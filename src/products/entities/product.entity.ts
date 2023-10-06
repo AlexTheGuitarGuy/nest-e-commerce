@@ -1,5 +1,6 @@
 import { ProductCategory } from 'src/common/enums/product-category.enum';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { UserEntity } from 'src/users/entities/user.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class ProductEntity {
@@ -11,4 +12,7 @@ export class ProductEntity {
 
   @Column()
   category!: ProductCategory;
+
+  @ManyToOne(() => UserEntity, (user) => user.products)
+  seller!: UserEntity;
 }

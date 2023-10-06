@@ -1,6 +1,7 @@
 import { Exclude } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
+import { ProductDto } from 'src/products/dto/product.dto';
 
 export class UserDto {
   @IsNotEmpty()
@@ -18,5 +19,8 @@ export class UserDto {
   @IsString()
   username!: string;
 
+  @IsEnum(Role)
   role!: Role;
+
+  products!: ProductDto[];
 }

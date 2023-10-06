@@ -6,5 +6,6 @@ export class CreateProductDto {
   name!: string;
 
   @IsEnum(ProductCategory)
+  @IsNotEmpty()
   category!: ProductCategory;
 }
