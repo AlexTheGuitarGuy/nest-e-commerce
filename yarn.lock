@@ -781,10 +781,10 @@
   resolved "https://registry.yarnpkg.com/@nestjs/passport/-/passport-10.0.2.tgz#42ad193bccec3c332ac8b5e04cf6897bd57500fb"
   integrity sha512-od31vfB2z3y05IDB5dWSbCGE2+pAf2k2WCBinNuTTOxN0O0+wtO1L3kawj/aCW3YR9uxsTOVbTDwtwgpNNsnjQ==
 
-"@nestjs/platform-express@^10.0.0":
-  version "10.2.5"
-  resolved "https://registry.yarnpkg.com/@nestjs/platform-express/-/platform-express-10.2.5.tgz#95098a386828cd65bea4322f828e2425b518c819"
-  integrity sha512-BChjJfsVtsvds31rp5V7LwM2XEQaxkFKUE0TGSH91m95FRO65Fii5RH6atasmhZTIW+T8LR5LuI/MO7cgZOiVg==
+"@nestjs/platform-express@^10.2.7":
+  version "10.2.7"
+  resolved "https://registry.yarnpkg.com/@nestjs/platform-express/-/platform-express-10.2.7.tgz#b2ef2df01c0c757a3d356659460563a5246e7d0f"
+  integrity sha512-p+kp6aJtkgAdVpUrCVmM6MKtOvjsbt7QofBiZMidjYesZkMeG5gZ1D2SK8XzvQ8VXHJfFgEdY2xcKGB+wJLOYQ==
   dependencies:
     body-parser "1.20.2"
     cors "2.8.5"
@@ -1078,6 +1078,13 @@
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.2.tgz#93e25bf9ee75fe0fd80b594bc4feb0e862111b5a"
   integrity sha512-YATxVxgRqNH6nHEIsvg6k2Boc1JHI9ZbH5iWFFv/MTkchz3b1ieGDa5T0a9RznNdI0KhVbdbWSN+KWWrQZRxTw==
+
+"@types/multer@^1.4.8":
+  version "1.4.8"
+  resolved "https://registry.yarnpkg.com/@types/multer/-/multer-1.4.8.tgz#8d98c36f6a4e0b228a9f262cd66e881d7cd64039"
+  integrity sha512-VMZOW6mnmMMhA5m3fsCdXBwFwC+a+27/8gctNMuQC4f7UtWcF79KAFGoIfKZ4iqrElgWIa3j5vhMJDp0iikQ1g==
+  dependencies:
+    "@types/express" "*"
 
 "@types/node@*", "@types/node@^20.3.1":
   version "20.6.3"
@@ -4162,6 +4169,19 @@ multer@1.4.4-lts.1:
   version "1.4.4-lts.1"
   resolved "https://registry.yarnpkg.com/multer/-/multer-1.4.4-lts.1.tgz#24100f701a4611211cfae94ae16ea39bb314e04d"
   integrity sha512-WeSGziVj6+Z2/MwQo3GvqzgR+9Uc+qt8SwHKh3gvNPiISKfsMfG4SvCOFYlxxgkXt7yIV2i1yczehm0EOKIxIg==
+  dependencies:
+    append-field "^1.0.0"
+    busboy "^1.0.0"
+    concat-stream "^1.5.2"
+    mkdirp "^0.5.4"
+    object-assign "^4.1.1"
+    type-is "^1.6.4"
+    xtend "^4.0.0"
+
+multer@^1.4.5-lts.1:
+  version "1.4.5-lts.1"
+  resolved "https://registry.yarnpkg.com/multer/-/multer-1.4.5-lts.1.tgz#803e24ad1984f58edffbc79f56e305aec5cfd1ac"
+  integrity sha512-ywPWvcDMeH+z9gQq5qYHCCy+ethsk4goepZ45GLD63fOu0YcNecQxi64nDs3qluZB+murG3/D4dJ7+dGctcCQQ==
   dependencies:
     append-field "^1.0.0"
     busboy "^1.0.0"

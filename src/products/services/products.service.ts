@@ -15,11 +15,29 @@ import {
 import { Observable, catchError, from, map, switchMap, tap } from 'rxjs';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { plainToClass, plainToInstance } from 'class-transformer';
-import { UpdateProductDto } from '../dto/update-produtct.dto';
 import { PostgresErrorCode } from 'src/common/enums/postgres-error-code.enum';
 import { ProductDto } from '../dto/product.dto';
 import { UserDto } from 'src/users/dto/user.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
+import { UpdateProductDto } from '../dto/update-product.dto';
+import multer from 'multer';
+import { extname } from 'path';
+import { ImageDto } from '../dto/image.dto';
+
+const storage = multer.diskStorage({
+  destination: (_, _file, cb) => {
+    cb(null, './public/images/products');
+  },
+  filename: (_, file, cb) => {
+    const randomName = Array(32)
+      .fill(null)
+      .map(() => Math.round(Math.random() * 16).toString(16))
+      .join('');
+    cb(null, `${randomName}${extname(file.originalname)}`);
+  },
+});
+
+multer({ storage });
 
 @Injectable()
 export class ProductsService {
@@ -137,6 +155,47 @@ export class ProductsService {
         relations,
         select: { ...select },
       }),
-    ).pipe(map((product) => plainToClass(ProductDto, product)));
+    ).pipe(
+      map((product) => {
+        if (!product) {
+          throw new NotFoundException(`Product with id ${id} not found`);
+        }
+        return plainToClass(ProductDto, product);
+      }),
+    );
+  }
+
+  uploadImage(productId: number, image: Express.Multer.File) {
+    return from(
+      this.findOneById(productId, { seller: true, images: true }, {}),
+    ).pipe(
+      switchMap((found) => {
+        if (!image) throw new BadRequestException('Image is required');
+        return this.updateOne(productId, {
+          images: [
+            ...(found?.images || []),
+            {
+              url: image.path,
+              name: image.originalname,
+            } as unknown as ImageDto,
+          ],
+        });
+      }),
+    );
+  }
+
+  // TODO: Implement deletion from bucket
+  removeImage(productId: number, imageId: number) {
+    return from(
+      this.findOneById(productId, { seller: true, images: true }, {}),
+    ).pipe(
+      switchMap((found) => {
+        const image = found.images?.find((e) => e.id === imageId);
+        if (!image) throw new NotFoundException('Image not found');
+        return this.updateOne(productId, {
+          images: found.images?.filter((e) => e.id !== imageId) || [],
+        });
+      }),
+    );
   }
 }
