@@ -16,6 +16,9 @@ export class ProductDto {
   @IsNotEmpty()
   name!: string;
 
+  @IsOptional()
+  description?: string;
+
   @IsEnum(ProductCategory)
   @IsNotEmpty()
   category!: ProductCategory;

@@ -17,6 +17,9 @@ export class ProductEntity {
   @Column({ unique: true })
   name!: string;
 
+  @Column({ nullable: true })
+  description?: string;
+
   @Column()
   category!: ProductCategory;
 

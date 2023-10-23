@@ -18,4 +18,7 @@ export class UpdateProductDto {
   @IsString({ each: true })
   @IsOptional()
   images?: ImageDto[];
+
+  @IsOptional()
+  description?: string;
 }

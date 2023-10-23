@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { ProductCategory } from 'src/common/enums/product-category.enum';
 
 export class CreateProductDto {
@@ -8,4 +8,7 @@ export class CreateProductDto {
   @IsEnum(ProductCategory)
   @IsNotEmpty()
   category!: ProductCategory;
+
+  @IsOptional()
+  description?: string;
 }
