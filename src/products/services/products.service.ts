@@ -12,7 +12,15 @@ import {
   FindOptionsWhere,
   Repository,
 } from 'typeorm';
-import { Observable, catchError, from, map, switchMap, tap } from 'rxjs';
+import {
+  Observable,
+  catchError,
+  forkJoin,
+  from,
+  map,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { plainToClass, plainToInstance } from 'class-transformer';
 import { PostgresErrorCode } from 'src/common/enums/postgres-error-code.enum';
@@ -20,24 +28,10 @@ import { ProductDto } from '../dto/product.dto';
 import { UserDto } from 'src/users/dto/user.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { UpdateProductDto } from '../dto/update-product.dto';
-import multer from 'multer';
-import { extname } from 'path';
 import { ImageDto } from '../dto/image.dto';
-
-const storage = multer.diskStorage({
-  destination: (_, _file, cb) => {
-    cb(null, './public/images/products');
-  },
-  filename: (_, file, cb) => {
-    const randomName = Array(32)
-      .fill(null)
-      .map(() => Math.round(Math.random() * 16).toString(16))
-      .join('');
-    cb(null, `${randomName}${extname(file.originalname)}`);
-  },
-});
-
-multer({ storage });
+import { BufferedFile } from 'src/minio-client/models/file.model';
+import { MinioClientService } from 'src/minio-client/services/minio-client.service';
+import { ImageEntity } from '../entities/image.entity';
 
 @Injectable()
 export class ProductsService {
@@ -46,6 +40,9 @@ export class ProductsService {
     private readonly _productsRepository: Repository<ProductEntity>,
     @InjectRepository(UserEntity)
     private readonly _usersRepository: Repository<UserEntity>,
+    @InjectRepository(ImageEntity)
+    private readonly _imagesRepository: Repository<ImageEntity>,
+    private readonly _minioClientService: MinioClientService,
   ) {}
 
   findMany(
@@ -165,37 +162,53 @@ export class ProductsService {
     );
   }
 
-  uploadImage(productId: number, image: Express.Multer.File) {
+  uploadImage(productId: number, image: BufferedFile) {
     return from(
       this.findOneById(productId, { seller: true, images: true }, {}),
     ).pipe(
-      switchMap((found) => {
-        if (!image) throw new BadRequestException('Image is required');
-        return this.updateOne(productId, {
+      switchMap((found) =>
+        this._minioClientService.upload(image).pipe(
+          map(({ url, filename }) => {
+            return { found, url, filename };
+          }),
+        ),
+      ),
+      switchMap(({ found, url, filename }) =>
+        this.updateOne(productId, {
           images: [
             ...(found?.images || []),
             {
-              url: image.path,
-              name: image.originalname,
-            } as unknown as ImageDto,
+              url,
+              name: filename,
+            } as ImageDto,
           ],
-        });
-      }),
+        }),
+      ),
     );
   }
 
-  // TODO: Implement deletion from bucket
   removeImage(productId: number, imageId: number) {
     return from(
       this.findOneById(productId, { seller: true, images: true }, {}),
     ).pipe(
       switchMap((found) => {
         const image = found.images?.find((e) => e.id === imageId);
-        if (!image) throw new NotFoundException('Image not found');
-        return this.updateOne(productId, {
-          images: found.images?.filter((e) => e.id !== imageId) || [],
-        });
+        if (!image?.name) throw new NotFoundException('Image not found');
+
+        return forkJoin([
+          this._minioClientService.delete(image.name),
+          this._imagesRepository.delete(imageId),
+        ]).pipe(
+          map(() => {
+            return found;
+          }),
+        );
       }),
+      switchMap((found) =>
+        this.updateOne(productId, {
+          images: found.images?.filter((e) => e.id !== imageId) || [],
+        }),
+      ),
     );
   }
 }
