@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,25 +29,9 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserDto } from 'src/users/dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateProductDto } from '../dto/update-product.dto';
-import { extname } from 'path';
-import multer from 'multer';
 import { ImageFileFilter } from 'src/common/filters/image-file.filter';
 import { MAX_FILE_SIZE } from 'src/common/constants';
-
-const storage = multer.diskStorage({
-  destination: (_, _file, cb) => {
-    cb(null, './public/images/products');
-  },
-  filename: (_, file, cb) => {
-    const randomName = Array(32)
-      .fill(null)
-      .map(() => Math.round(Math.random() * 16).toString(16))
-      .join('');
-    cb(null, `${randomName}${extname(file.originalname)}`);
-  },
-});
-
-multer({ storage });
+import { BufferedFile } from 'src/minio-client/models/file.model';
 
 @Controller('products')
 export class ProductsController {
@@ -145,7 +130,6 @@ export class ProductsController {
 
   @Post(':id/image')
   @Roles(Role.Admin, Role.Seller)
-  @UseInterceptors(FileInterceptor('image', { storage }))
   @UseInterceptors(
     FileInterceptor('image', {
       limits: { fileSize: MAX_FILE_SIZE },
@@ -154,14 +138,14 @@ export class ProductsController {
   )
   uploadImage(
     @Param('id', ParseIntPipe) productId: number,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image: BufferedFile,
     @Req() req: Request,
   ) {
     const user = req.user as UserDto;
+    if (!image) throw new BadRequestException('Image is required');
+
     return this._checkSellerProductRelation(productId, user).pipe(
-      switchMap(() => {
-        return this._productsService.uploadImage(productId, image);
-      }),
+      switchMap(() => this._productsService.uploadImage(productId, image)),
     );
   }
 

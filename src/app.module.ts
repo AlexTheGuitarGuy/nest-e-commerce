@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './products/products.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -19,11 +17,8 @@ import { ProductsModule } from './products/products.module';
       entities: [__dirname + '/../**/*.entity.js'],
       database: process.env['PG_DATABASE'] || 'postgres',
       synchronize: true,
-      logging: true,
     }),
     ProductsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

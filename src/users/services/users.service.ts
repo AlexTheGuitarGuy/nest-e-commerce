@@ -63,8 +63,6 @@ export class UsersService {
       }),
     ).pipe(
       map(([items, itemsCount]) => {
-        console.log('items', items);
-
         const logPayload = {
           where,
           relations,
