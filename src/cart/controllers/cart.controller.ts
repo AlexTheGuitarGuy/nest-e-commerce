@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -41,6 +42,17 @@ export class CartController {
     return this._updateCart(userId, updateCartDto);
   }
 
+  @Delete('product/:productId')
+  deleteProductFromCartCurrentUser(
+    @Req() req: Request,
+    @Param('productId') productId: number,
+  ) {
+    const userId = (req['user'] as UserDto).id;
+    return this._cartService
+      .deleteProductFromCart(userId, productId)
+      .pipe(map(() => ({ status: HttpStatus.OK })));
+  }
+
   @Post(':userId')
   @Roles(Role.Admin)
   updateCartAdmin(
@@ -48,6 +60,17 @@ export class CartController {
     @Body() updateCartDto: UpdateCartDto,
   ) {
     return this._updateCart(userId, updateCartDto);
+  }
+
+  @Delete('user/:userId/product/:productId')
+  @Roles(Role.Admin)
+  deleteProductFromCartAdmin(
+    @Param('productId') productId: number,
+    @Param('userId') userId: number,
+  ) {
+    return this._cartService
+      .deleteProductFromCart(userId, productId)
+      .pipe(map(() => ({ status: HttpStatus.OK })));
   }
 
   @Get()

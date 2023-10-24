@@ -1,5 +1,6 @@
 import { ProductEntity } from 'src/products/entities/product.entity';
 import {
+  Check,
   Column,
   Entity,
   JoinColumn,
@@ -22,5 +23,6 @@ export class CartItemEntity {
   cart!: CartEntity;
 
   @Column()
+  @Check('quantity > 0')
   quantity!: number;
 }
