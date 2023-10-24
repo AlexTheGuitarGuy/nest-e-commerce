@@ -41,15 +41,29 @@ export class CartService {
     );
   }
 
-  addToCart(userId: number, productId: number, quantity: number) {
+  updateCart(userId: number, productId: number, quantity: number) {
     return this._getCart(userId).pipe(
-      switchMap((cart) =>
-        this._cartItemRepository.save({
+      switchMap((cart) => {
+        if (cart.cartItems.find((item) => item.product.id === productId)) {
+          if (quantity === 0) {
+            return this._cartItemRepository.delete({
+              cart,
+              product: { id: productId },
+            });
+          }
+
+          return this._cartItemRepository.update(
+            { cart, product: { id: productId } },
+            { quantity },
+          );
+        }
+
+        return this._cartItemRepository.save({
           cart,
           product: { id: productId },
           quantity,
-        }),
-      ),
+        });
+      }),
       map(() => void 0),
     );
   }
