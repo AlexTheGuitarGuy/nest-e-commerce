@@ -9,12 +9,12 @@ import {
 } from '@nestjs/common';
 import { CartService } from '../services/cart.service';
 import { Request } from 'express';
-import { AddToCartDto } from '../dto/add-to-cart.dto';
 import { UserDto } from 'src/users/dto/user.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { UsersService } from 'src/users/services/users.service';
 import { switchMap, map, Observable } from 'rxjs';
+import { UpdateCartDto } from '../dto/update-cart.dto';
 
 @Controller('cart')
 export class CartController {
@@ -23,31 +23,31 @@ export class CartController {
     private readonly _usersService: UsersService,
   ) {}
 
-  private _addToCart(
+  private _updateCart(
     userId: number,
-    addToCartDto: AddToCartDto,
+    updateCartDto: UpdateCartDto,
   ): Observable<{ status: HttpStatus }> {
     return this._cartService
-      .addToCart(userId, addToCartDto.productId, addToCartDto.quantity)
+      .updateCart(userId, updateCartDto.productId, updateCartDto.quantity)
       .pipe(map(() => ({ status: HttpStatus.CREATED })));
   }
 
   @Post()
-  addToCartCurrentUser(
+  updateCartCurrentUser(
     @Req() req: Request,
-    @Body() addToCartDto: AddToCartDto,
+    @Body() updateCartDto: UpdateCartDto,
   ) {
     const userId = (req['user'] as UserDto).id;
-    return this._addToCart(userId, addToCartDto);
+    return this._updateCart(userId, updateCartDto);
   }
 
   @Post(':userId')
   @Roles(Role.Admin)
-  addToCartAdmin(
+  updateCartAdmin(
     @Param('userId') userId: number,
-    @Body() addToCartDto: AddToCartDto,
+    @Body() updateCartDto: UpdateCartDto,
   ) {
-    return this._addToCart(userId, addToCartDto);
+    return this._updateCart(userId, updateCartDto);
   }
 
   @Get()

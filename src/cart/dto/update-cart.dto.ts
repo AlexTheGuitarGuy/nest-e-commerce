@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
 
-export class AddToCartDto {
+export class UpdateCartDto {
   @IsOptional()
   userId?: number;
 
