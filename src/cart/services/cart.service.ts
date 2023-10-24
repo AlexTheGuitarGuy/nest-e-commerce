@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CartEntity } from '../entities/cart.entity';
@@ -45,13 +45,6 @@ export class CartService {
     return this._getCart(userId).pipe(
       switchMap((cart) => {
         if (cart.cartItems.find((item) => item.product.id === productId)) {
-          if (quantity === 0) {
-            return this._cartItemRepository.delete({
-              cart,
-              product: { id: productId },
-            });
-          }
-
           return this._cartItemRepository.update(
             { cart, product: { id: productId } },
             { quantity },
@@ -64,6 +57,23 @@ export class CartService {
           quantity,
         });
       }),
+      map(() => void 0),
+    );
+  }
+
+  deleteProductFromCart(userId: number, productId: number) {
+    return this._getCart(userId).pipe(
+      map((cart) => {
+        if (!cart.cartItems.find((item) => item.product.id === productId)) {
+          throw new NotFoundException(
+            `Product with id ${productId} not found in cart`,
+          );
+        }
+        return cart;
+      }),
+      switchMap((cart) =>
+        this._cartItemRepository.delete({ cart, product: { id: productId } }),
+      ),
       map(() => void 0),
     );
   }

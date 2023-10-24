@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, Min } from 'class-validator';
 
 export class UpdateCartDto {
   @IsOptional()
@@ -8,5 +8,6 @@ export class UpdateCartDto {
   productId!: number;
 
   @IsNotEmpty()
+  @Min(1, { message: 'Quantity must be greater than 0' })
   quantity!: number;
 }
