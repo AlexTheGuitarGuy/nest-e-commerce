@@ -2,8 +2,10 @@ import {
   IsArray,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
+  Min,
 } from 'class-validator';
 import { ProductCategory } from 'src/common/enums/product-category.enum';
 import { UserDto } from 'src/users/dto/user.dto';
@@ -15,6 +17,11 @@ export class ProductDto {
 
   @IsNotEmpty()
   name!: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(1, { message: 'Quantity must be greater than 0' })
+  price!: number;
 
   @IsOptional()
   description?: string;
