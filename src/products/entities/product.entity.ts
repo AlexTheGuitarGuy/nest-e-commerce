@@ -2,6 +2,7 @@ import { ProductCategory } from 'src/common/enums/product-category.enum';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { ImageEntity } from './image.entity';
 import {
+  Check,
   Column,
   Entity,
   ManyToOne,
@@ -16,6 +17,10 @@ export class ProductEntity {
 
   @Column({ unique: true })
   name!: string;
+
+  @Column()
+  @Check('price > 0')
+  price!: number;
 
   @Column({ nullable: true })
   description?: string;
