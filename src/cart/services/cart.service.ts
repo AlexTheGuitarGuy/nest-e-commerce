@@ -18,7 +18,7 @@ export class CartService {
   ) {}
 
   private _getCart(userId: number, productId?: number): Observable<CartDto> {
-    return this._redisClientService.get(`${userId}`).pipe(
+    return this._redisClientService.get(`cart:${userId}`).pipe(
       switchMap((cartItems) =>
         productId
           ? this._productsService
@@ -52,7 +52,7 @@ export class CartService {
 
         if (!product) {
           return this._redisClientService.set(
-            `${userId}`,
+            `cart:${userId}`,
             JSON.stringify([...cartItems, { productId, quantity }]),
           );
         }
@@ -60,7 +60,7 @@ export class CartService {
         product.quantity = quantity;
 
         return this._redisClientService.set(
-          `${userId}`,
+          `cart:${userId}`,
           JSON.stringify(cartItems),
         );
       }),
@@ -78,7 +78,7 @@ export class CartService {
           if (!cartItems.length)
             throw new BadRequestException('Cart is already empty');
 
-          return this._redisClientService.del(`${userId}`);
+          return this._redisClientService.del(`cart:${userId}`);
         }
 
         const product = cartItems.find((item) => item.productId === productId);
@@ -90,7 +90,7 @@ export class CartService {
         );
 
         return this._redisClientService.set(
-          `${userId}`,
+          `cart:${userId}`,
           JSON.stringify(filteredCart),
         );
       }),
