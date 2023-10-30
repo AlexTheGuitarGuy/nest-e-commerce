@@ -5,6 +5,7 @@ import { ProductsModule } from './products/products.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartModule } from './cart/cart.module';
 import { RedisClientModule } from './redis-client/redis-client.module';
+import { MongodbClientModule } from './mongodb-client/mongodb-client.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { RedisClientModule } from './redis-client/redis-client.module';
     ProductsModule,
     CartModule,
     RedisClientModule,
+    MongodbClientModule,
   ],
 })
 export class AppModule {}
