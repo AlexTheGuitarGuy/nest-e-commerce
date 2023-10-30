@@ -10,6 +10,7 @@ import { ProductsService } from './services/products.service';
 @Module({
   controllers: [ProductsController],
   providers: [ProductsService],
+  exports: [ProductsService],
   imports: [
     TypeOrmModule.forFeature([ProductEntity, UserEntity, ImageEntity]),
     MinioClientModule,

@@ -4,6 +4,7 @@ import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartModule } from './cart/cart.module';
+import { RedisClientModule } from './redis-client/redis-client.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CartModule } from './cart/cart.module';
     }),
     ProductsModule,
     CartModule,
+    RedisClientModule,
   ],
 })
 export class AppModule {}

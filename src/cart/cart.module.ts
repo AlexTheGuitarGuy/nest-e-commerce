@@ -7,6 +7,8 @@ import { UserEntity } from 'src/users/entities/user.entity';
 import { ProductEntity } from 'src/products/entities/product.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from 'src/users/users.module';
+import { RedisClientModule } from 'src/redis-client/redis-client.module';
+import { ProductsModule } from 'src/products/products.module';
 
 @Module({
   providers: [CartService],
@@ -19,6 +21,8 @@ import { UsersModule } from 'src/users/users.module';
       ProductEntity,
     ]),
     UsersModule,
+    ProductsModule,
+    RedisClientModule,
   ],
 })
 export class CartModule {}

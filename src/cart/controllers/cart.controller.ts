@@ -8,29 +8,28 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import { CartService } from '../services/cart.service';
 import { Request } from 'express';
+import { UpdateCartDto } from '../dto/update-cart.dto';
 import { UserDto } from 'src/users/dto/user.dto';
+import { CartService } from '../services/cart.service';
+import { map } from 'rxjs';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
-import { UsersService } from 'src/users/services/users.service';
-import { switchMap, map, Observable } from 'rxjs';
-import { UpdateCartDto } from '../dto/update-cart.dto';
 
 @Controller('cart')
 export class CartController {
-  constructor(
-    private readonly _cartService: CartService,
-    private readonly _usersService: UsersService,
-  ) {}
+  constructor(private readonly _cartService: CartService) {}
 
-  private _updateCart(
-    userId: number,
-    updateCartDto: UpdateCartDto,
-  ): Observable<{ status: HttpStatus }> {
-    return this._cartService
-      .updateCart(userId, updateCartDto.productId, updateCartDto.quantity)
-      .pipe(map(() => ({ status: HttpStatus.CREATED })));
+  @Get()
+  getCartCurrentUser(@Req() req: Request) {
+    const userId = (req['user'] as UserDto).id;
+    return this._cartService.viewCart(userId);
+  }
+
+  @Get(':userId')
+  @Roles(Role.Admin)
+  getCartAdmin(@Param('userId') userId: number) {
+    return this._cartService.viewCart(userId);
   }
 
   @Post()
@@ -39,7 +38,20 @@ export class CartController {
     @Body() updateCartDto: UpdateCartDto,
   ) {
     const userId = (req['user'] as UserDto).id;
-    return this._updateCart(userId, updateCartDto);
+    return this._cartService
+      .updateCart(userId, updateCartDto.productId, updateCartDto.quantity)
+      .pipe(map(() => ({ status: HttpStatus.CREATED })));
+  }
+
+  @Post(':userId')
+  @Roles(Role.Admin)
+  updateCartAdmin(
+    @Param('userId') userId: number,
+    @Body() updateCartDto: UpdateCartDto,
+  ) {
+    return this._cartService
+      .updateCart(userId, updateCartDto.productId, updateCartDto.quantity)
+      .pipe(map(() => ({ status: HttpStatus.CREATED })));
   }
 
   @Delete('product/:productId')
@@ -49,17 +61,8 @@ export class CartController {
   ) {
     const userId = (req['user'] as UserDto).id;
     return this._cartService
-      .deleteProductFromCart(userId, productId)
+      .deleteFromCart(userId, productId)
       .pipe(map(() => ({ status: HttpStatus.OK })));
-  }
-
-  @Post(':userId')
-  @Roles(Role.Admin)
-  updateCartAdmin(
-    @Param('userId') userId: number,
-    @Body() updateCartDto: UpdateCartDto,
-  ) {
-    return this._updateCart(userId, updateCartDto);
   }
 
   @Delete('user/:userId/product/:productId')
@@ -69,21 +72,23 @@ export class CartController {
     @Param('userId') userId: number,
   ) {
     return this._cartService
-      .deleteProductFromCart(userId, productId)
+      .deleteFromCart(userId, productId)
       .pipe(map(() => ({ status: HttpStatus.OK })));
   }
 
-  @Get()
-  getCurrentUserCart(@Req() req: Request) {
+  @Delete()
+  deleteCartCurrentUser(@Req() req: Request) {
     const userId = (req['user'] as UserDto).id;
-    return this._cartService.viewCart(userId);
+    return this._cartService
+      .deleteFromCart(userId)
+      .pipe(map(() => ({ status: HttpStatus.OK })));
   }
 
-  @Get(':userId')
+  @Delete('user/:userId')
   @Roles(Role.Admin)
-  getCartAdmin(@Param('userId') userId: number) {
-    return this._usersService
-      .findOneById(userId)
-      .pipe(switchMap((user) => this._cartService.viewCart(user.id)));
+  deleteCartAdmin(@Param('userId') userId: number) {
+    return this._cartService
+      .deleteFromCart(userId)
+      .pipe(map(() => ({ status: HttpStatus.OK })));
   }
 }
