@@ -1,84 +1,99 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CartEntity } from '../entities/cart.entity';
-import { CartItemEntity } from '../entities/cart-item.entity';
-import { Observable, of, from, switchMap, map } from 'rxjs';
+import { switchMap, map, Observable, of } from 'rxjs';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { RedisClientService } from 'src/redis-client/services/redis-client.service';
 import { UsersService } from 'src/users/services/users.service';
 import { CartDto } from '../dto/cart.dto';
-import { plainToInstance } from 'class-transformer';
+import { ProductsService } from 'src/products/services/products.service';
 
 @Injectable()
 export class CartService {
   constructor(
-    @InjectRepository(CartEntity)
-    private readonly _cartRepository: Repository<CartEntity>,
-    @InjectRepository(CartItemEntity)
-    private readonly _cartItemRepository: Repository<CartItemEntity>,
+    private readonly _redisClientService: RedisClientService,
     private readonly _usersService: UsersService,
+    private readonly _productsService: ProductsService,
   ) {}
 
-  private _getCart(userId: number): Observable<CartDto> {
-    return from(
-      this._cartRepository.findOne({
-        where: { user: { id: userId } },
-        relations: ['cartItems', 'cartItems.product', 'user'],
-      }),
-    ).pipe(
-      switchMap((cart) => {
-        if (!cart) {
-          return this._usersService
-            .findOneById(userId)
-            .pipe(
-              switchMap((user) =>
-                this._cartRepository.save({ cartItems: [], user }),
-              ),
-            );
-        }
-        return of(cart);
-      }),
-      map((cart) => plainToInstance(CartDto, cart)),
-    );
-  }
-
-  updateCart(userId: number, productId: number, quantity: number) {
-    return this._getCart(userId).pipe(
-      switchMap((cart) => {
-        if (cart.cartItems.find((item) => item.product.id === productId)) {
-          return this._cartItemRepository.update(
-            { cart, product: { id: productId } },
-            { quantity },
-          );
-        }
-
-        return this._cartItemRepository.save({
-          cart,
-          product: { id: productId },
-          quantity,
-        });
-      }),
-      map(() => void 0),
-    );
-  }
-
-  deleteProductFromCart(userId: number, productId: number) {
-    return this._getCart(userId).pipe(
-      map((cart) => {
-        if (!cart.cartItems.find((item) => item.product.id === productId)) {
-          throw new NotFoundException(
-            `Product with id ${productId} not found in cart`,
-          );
-        }
-        return cart;
-      }),
-      switchMap((cart) =>
-        this._cartItemRepository.delete({ cart, product: { id: productId } }),
+  private _getCart(userId: number, productId?: number): Observable<CartDto> {
+    return this._redisClientService.get(`${userId}`).pipe(
+      switchMap((cartItems) =>
+        productId
+          ? this._productsService
+              .findOneById(productId, {}, {})
+              .pipe(map(() => cartItems))
+          : of(cartItems),
       ),
-      map(() => void 0),
+      switchMap((cartItems) =>
+        this._usersService
+          .findOneById(userId)
+          .pipe(map((user) => ({ user, cartItems }))),
+      ),
+      map(({ user, cartItems }) => {
+        if (!cartItems) return { user, cartItems: [] };
+        return {
+          user,
+          cartItems: JSON.parse(cartItems),
+        };
+      }),
+    );
+  }
+
+  updateCart(
+    userId: number,
+    productId: number,
+    quantity: number,
+  ): Observable<'OK'> {
+    return this._getCart(userId, productId).pipe(
+      switchMap(({ cartItems }) => {
+        const product = cartItems.find((item) => item.productId === productId);
+
+        if (!product) {
+          return this._redisClientService.set(
+            `${userId}`,
+            JSON.stringify([...cartItems, { productId, quantity }]),
+          );
+        }
+
+        product.quantity = quantity;
+
+        return this._redisClientService.set(
+          `${userId}`,
+          JSON.stringify(cartItems),
+        );
+      }),
     );
   }
 
   viewCart(userId: number): Observable<CartDto> {
     return this._getCart(userId);
+  }
+
+  deleteFromCart(userId: number, productId?: number) {
+    return this._getCart(userId, productId).pipe(
+      switchMap(({ cartItems }) => {
+        if (!productId) {
+          if (!cartItems.length)
+            throw new BadRequestException('Cart is already empty');
+
+          return this._redisClientService.del(`${userId}`);
+        }
+
+        const product = cartItems.find((item) => item.productId === productId);
+
+        if (!product) throw new NotFoundException('Product not found in cart');
+
+        const filteredCart = cartItems.filter(
+          (item) => item.productId !== productId,
+        );
+
+        return this._redisClientService.set(
+          `${userId}`,
+          JSON.stringify(filteredCart),
+        );
+      }),
+    );
   }
 }
