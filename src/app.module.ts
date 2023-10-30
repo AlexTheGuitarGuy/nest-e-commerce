@@ -6,20 +6,24 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartModule } from './cart/cart.module';
 import { RedisClientModule } from './redis-client/redis-client.module';
 import { MongodbClientModule } from './mongodb-client/mongodb-client.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import postgres from './common/configs/postgres.config';
 
 @Module({
   imports: [
     AuthModule,
     UsersModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env['PG_HOST'] || 'localhost',
-      port: +(process.env['PG_PORT'] || 5432),
-      username: process.env['PG_USERNAME'] || 'postgres',
-      password: process.env['PG_PASSWORD'] || 'postgres',
-      entities: [__dirname + '/../**/*.entity.js'],
-      database: process.env['PG_DATABASE'] || 'postgres',
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [postgres],
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const postgresConfig = configService.get('postgres');
+        if (!postgresConfig) throw new Error('Postgres config not found');
+        return postgresConfig;
+      },
     }),
     ProductsModule,
     CartModule,
