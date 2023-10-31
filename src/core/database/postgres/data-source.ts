@@ -1,10 +1,6 @@
-import { registerAs } from '@nestjs/config';
-import { config as dotenvConfig } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
-dotenvConfig({ path: '.env' });
-
-const config: DataSourceOptions = {
+export const datasourceOptions: DataSourceOptions = {
   type: 'postgres',
   host: process.env['PG_HOST'] || 'localhost',
   port: +(process.env['PG_PORT'] || 5432),
@@ -16,5 +12,4 @@ const config: DataSourceOptions = {
   migrations: ['src/migrations/**/*.{ts,js}'],
 };
 
-export default registerAs('postgres', () => config);
-export const connectionSource = new DataSource(config);
+export default new DataSource(datasourceOptions);
