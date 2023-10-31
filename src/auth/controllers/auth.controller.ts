@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpStatus,
   Post,
   Req,
   Res,
@@ -34,13 +33,12 @@ export class AuthController {
         sameSite: 'lax',
         expires: dayjs().add(1, 'day').toDate(),
       })
-      .send({ status: HttpStatus.OK, message: 'Login successful' });
+      .send({ message: 'Login successful' });
   }
 
   @Post('logout')
   logout(@Res() res: Response) {
     res.clearCookie('access_token').send({
-      status: HttpStatus.OK,
       message: 'Logout successful',
     });
   }

@@ -17,5 +17,6 @@ import { ProductsModule } from 'src/products/products.module';
     ProductsModule,
     RedisClientModule,
   ],
+  exports: [CartService],
 })
 export class CartModule {}

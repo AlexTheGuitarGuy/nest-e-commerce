@@ -21,7 +21,7 @@ import { ProductsService } from '../services/products.service';
 import { ProductDto } from '../dto/product.dto';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { plainToInstance } from 'class-transformer';
-import { Observable, map, tap, switchMap } from 'rxjs';
+import { Observable, map, tap, concatMap } from 'rxjs';
 import { PageDto } from 'src/common/dto/page.dto';
 import { PageMetaDto } from 'src/common/dto/page-meta.dto';
 import { Role } from 'src/common/enums/role.enum';
@@ -94,7 +94,7 @@ export class ProductsController {
   create(@Body() createProductDto: CreateProductDto, @Req() req: Request) {
     return this._productsService
       .create(createProductDto, req.user as UserDto)
-      .pipe(map(() => ({ status: HttpStatus.CREATED })));
+      .pipe(map(() => ({ message: 'Product created' })));
   }
 
   @Patch(':id')
@@ -106,7 +106,7 @@ export class ProductsController {
   ) {
     const user = req.user as UserDto;
     return this._checkSellerProductRelation(id, user, updateProductDto).pipe(
-      switchMap(() => {
+      concatMap(() => {
         return this._productsService.updateOne(id, updateProductDto);
       }),
     );
@@ -117,7 +117,7 @@ export class ProductsController {
   removeOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const user = req.user as UserDto;
     return this._checkSellerProductRelation(id, user).pipe(
-      switchMap(() => {
+      concatMap(() => {
         return this._productsService.removeOne(id).pipe(
           map(() => ({
             result: HttpStatus.OK,
@@ -145,7 +145,7 @@ export class ProductsController {
     if (!image) throw new BadRequestException('Image is required');
 
     return this._checkSellerProductRelation(productId, user).pipe(
-      switchMap(() => this._productsService.uploadImage(productId, image)),
+      concatMap(() => this._productsService.uploadImage(productId, image)),
     );
   }
 
@@ -158,7 +158,7 @@ export class ProductsController {
   ) {
     const user = req.user as UserDto;
     return this._checkSellerProductRelation(productId, user).pipe(
-      switchMap(() => {
+      concatMap(() => {
         return this._productsService.removeImage(productId, imageId);
       }),
     );

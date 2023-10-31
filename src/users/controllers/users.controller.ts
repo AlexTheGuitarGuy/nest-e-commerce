@@ -9,7 +9,6 @@ import {
   Patch,
   ParseIntPipe,
   Delete,
-  HttpStatus,
   Req,
   UnauthorizedException,
   ForbiddenException,
@@ -103,9 +102,9 @@ export class UsersController {
     }
 
     return this._usersService.removeOne(id).pipe(
-      map(() => {
-        return { status: HttpStatus.OK };
-      }),
+      map(() => ({
+        message: 'User deleted',
+      })),
     );
   }
 }
