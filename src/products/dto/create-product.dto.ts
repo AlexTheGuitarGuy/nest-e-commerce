@@ -7,7 +7,7 @@ export class CreateProductDto {
 
   @IsNotEmpty()
   @IsNumber()
-  @Min(1, { message: 'Quantity must be greater than 0' })
+  @Min(1, { message: 'Price must be greater than 0' })
   price!: number;
 
   @IsEnum(ProductCategory)
