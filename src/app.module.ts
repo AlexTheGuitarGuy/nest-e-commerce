@@ -2,29 +2,22 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartModule } from './cart/cart.module';
 import { RedisClientModule } from './redis-client/redis-client.module';
 import { MongodbClientModule } from './mongodb-client/mongodb-client.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import postgres from './common/configs/postgres.config';
+import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './core/database/database.module';
+import { postgresConfig } from './core/database/postgres/postgres.config';
 
 @Module({
   imports: [
-    AuthModule,
-    UsersModule,
+    DatabaseModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [postgres],
+      load: [postgresConfig],
     }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => {
-        const postgresConfig = configService.get('postgres');
-        if (!postgresConfig) throw new Error('Postgres config not found');
-        return postgresConfig;
-      },
-    }),
+    AuthModule,
+    UsersModule,
     ProductsModule,
     CartModule,
     RedisClientModule,
