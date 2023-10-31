@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpStatus,
   Param,
   Post,
   Req,
@@ -40,7 +39,7 @@ export class CartController {
     const userId = (req['user'] as UserDto).id;
     return this._cartService
       .updateCart(userId, updateCartDto.productId, updateCartDto.quantity)
-      .pipe(map(() => ({ status: HttpStatus.CREATED })));
+      .pipe(map(() => ({ message: 'Cart updated' })));
   }
 
   @Post(':userId')
@@ -51,7 +50,7 @@ export class CartController {
   ) {
     return this._cartService
       .updateCart(userId, updateCartDto.productId, updateCartDto.quantity)
-      .pipe(map(() => ({ status: HttpStatus.CREATED })));
+      .pipe(map(() => ({ message: 'Cart updated' })));
   }
 
   @Delete('product/:productId')
@@ -62,7 +61,7 @@ export class CartController {
     const userId = (req['user'] as UserDto).id;
     return this._cartService
       .deleteFromCart(userId, productId)
-      .pipe(map(() => ({ status: HttpStatus.OK })));
+      .pipe(map(() => ({ message: 'Cart updated' })));
   }
 
   @Delete('user/:userId/product/:productId')
@@ -73,7 +72,7 @@ export class CartController {
   ) {
     return this._cartService
       .deleteFromCart(userId, productId)
-      .pipe(map(() => ({ status: HttpStatus.OK })));
+      .pipe(map(() => ({ message: 'Cart updated' })));
   }
 
   @Delete()
@@ -81,7 +80,7 @@ export class CartController {
     const userId = (req['user'] as UserDto).id;
     return this._cartService
       .deleteFromCart(userId)
-      .pipe(map(() => ({ status: HttpStatus.OK })));
+      .pipe(map(() => ({ message: 'Cart updated' })));
   }
 
   @Delete('user/:userId')
@@ -89,6 +88,6 @@ export class CartController {
   deleteCartAdmin(@Param('userId') userId: number) {
     return this._cartService
       .deleteFromCart(userId)
-      .pipe(map(() => ({ status: HttpStatus.OK })));
+      .pipe(map(() => ({ message: 'Cart updated' })));
   }
 }

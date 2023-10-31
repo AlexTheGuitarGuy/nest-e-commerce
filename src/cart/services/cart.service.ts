@@ -1,4 +1,4 @@
-import { switchMap, map, Observable, of } from 'rxjs';
+import { concatMap, map, Observable, of } from 'rxjs';
 import {
   BadRequestException,
   Injectable,
@@ -19,14 +19,14 @@ export class CartService {
 
   private _getCart(userId: number, productId?: number): Observable<CartDto> {
     return this._redisClientService.get(`cart:${userId}`).pipe(
-      switchMap((cartItems) =>
+      concatMap((cartItems) =>
         productId
           ? this._productsService
               .findOneById(productId, {}, {})
               .pipe(map(() => cartItems))
           : of(cartItems),
       ),
-      switchMap((cartItems) =>
+      concatMap((cartItems) =>
         this._usersService
           .findOneById(userId)
           .pipe(map((user) => ({ user, cartItems }))),
@@ -47,7 +47,7 @@ export class CartService {
     quantity: number,
   ): Observable<'OK'> {
     return this._getCart(userId, productId).pipe(
-      switchMap(({ cartItems }) => {
+      concatMap(({ cartItems }) => {
         const product = cartItems.find((item) => item.productId === productId);
 
         if (!product) {
@@ -73,7 +73,7 @@ export class CartService {
 
   deleteFromCart(userId: number, productId?: number) {
     return this._getCart(userId, productId).pipe(
-      switchMap(({ cartItems }) => {
+      concatMap(({ cartItems }) => {
         if (!productId) {
           if (!cartItems.length)
             throw new BadRequestException('Cart is already empty');

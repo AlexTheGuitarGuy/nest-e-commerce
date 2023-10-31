@@ -18,7 +18,7 @@ import {
   forkJoin,
   from,
   map,
-  switchMap,
+  concatMap,
   tap,
 } from 'rxjs';
 import { CreateProductDto } from '../dto/create-product.dto';
@@ -87,7 +87,7 @@ export class ProductsService {
         }
         return foundSeller;
       }),
-      switchMap((foundSeller) => {
+      concatMap((foundSeller) => {
         const product = this._productsRepository.create({
           ...createProductDto,
           seller: foundSeller,
@@ -110,7 +110,7 @@ export class ProductsService {
         }
         return found;
       }),
-      switchMap((found) => {
+      concatMap((found) => {
         try {
           const updated = this._productsRepository.merge(
             found,
@@ -167,14 +167,14 @@ export class ProductsService {
     return from(
       this.findOneById(productId, { seller: true, images: true }, {}),
     ).pipe(
-      switchMap((found) =>
+      concatMap((found) =>
         this._minioClientService.upload(image).pipe(
           map(({ url, filename }) => {
             return { found, url, filename };
           }),
         ),
       ),
-      switchMap(({ found, url, filename }) =>
+      concatMap(({ found, url, filename }) =>
         this.updateOne(productId, {
           images: [
             ...(found?.images || []),
@@ -192,7 +192,7 @@ export class ProductsService {
     return from(
       this.findOneById(productId, { seller: true, images: true }, {}),
     ).pipe(
-      switchMap((found) => {
+      concatMap((found) => {
         const image = found.images?.find((e) => e.id === imageId);
         if (!image?.name) throw new NotFoundException('Image not found');
 
@@ -205,7 +205,7 @@ export class ProductsService {
           }),
         );
       }),
-      switchMap((found) =>
+      concatMap((found) =>
         this.updateOne(productId, {
           images: found.images?.filter((e) => e.id !== imageId) || [],
         }),

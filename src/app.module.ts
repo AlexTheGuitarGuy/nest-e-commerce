@@ -8,6 +8,7 @@ import { MongodbClientModule } from './mongodb-client/mongodb-client.module';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './core/database/database.module';
 import { postgresConfig } from './core/database/postgres/postgres.config';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { postgresConfig } from './core/database/postgres/postgres.config';
     CartModule,
     RedisClientModule,
     MongodbClientModule,
+    OrdersModule,
   ],
 })
 export class AppModule {}

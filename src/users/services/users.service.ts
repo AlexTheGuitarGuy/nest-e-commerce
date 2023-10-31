@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Observable, from, switchMap, map, of, catchError, tap } from 'rxjs';
+import { Observable, from, concatMap, map, of, catchError, tap } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import {
@@ -31,7 +31,7 @@ export class UsersService {
     const { password, ...rest } = createUserDto;
 
     return from(bcrypt.hash(password, 10)).pipe(
-      switchMap((hashedPassword) => {
+      concatMap((hashedPassword) => {
         const user = this._usersRepository.create({
           ...rest,
           password: hashedPassword,
@@ -107,7 +107,7 @@ export class UsersService {
 
   validate(username: string, password: string): Observable<UserDto | null> {
     return from(this._usersRepository.findOne({ where: { username } })).pipe(
-      switchMap((user) => {
+      concatMap((user) => {
         if (!user || !bcrypt.compareSync(password, user.password))
           return of(null);
 
@@ -126,7 +126,7 @@ export class UsersService {
         }
         return found;
       }),
-      switchMap((found) => {
+      concatMap((found) => {
         if (!updateUserDto.password) return of(found);
 
         return from(bcrypt.hash(updateUserDto.password, 10)).pipe(
@@ -136,7 +136,7 @@ export class UsersService {
           }),
         );
       }),
-      switchMap((found) => {
+      concatMap((found) => {
         try {
           const updated = this._usersRepository.merge(found, updateUserDto);
           return from(this._usersRepository.save(updated));
