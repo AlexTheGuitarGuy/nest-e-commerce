@@ -8,6 +8,8 @@ import { RedisClientService } from 'src/redis-client/services/redis-client.servi
 import { UsersService } from 'src/users/services/users.service';
 import { CartDto } from '../dto/cart.dto';
 import { ProductsService } from 'src/products/services/products.service';
+import { ProductDto } from 'src/products/dto/product.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class CartService {
@@ -17,27 +19,24 @@ export class CartService {
     private readonly _productsService: ProductsService,
   ) {}
 
-  private _getCart(userId: number, productId?: number): Observable<CartDto> {
+  private _getCart(
+    userId: number,
+    productId?: number,
+  ): Observable<CartDto & { product?: ProductDto }> {
     return this._redisClientService.get(`cart:${userId}`).pipe(
-      concatMap((cartItems) =>
-        productId
+      concatMap((cartItems) => {
+        const cartItemsParsed = JSON.parse(cartItems || '[]');
+        return productId
           ? this._productsService
               .findOneById(productId, {}, {})
-              .pipe(map(() => cartItems))
-          : of(cartItems),
-      ),
-      concatMap((cartItems) =>
+              .pipe(map((product) => ({ cartItems: cartItemsParsed, product })))
+          : of({ cartItems: cartItemsParsed, product: undefined });
+      }),
+      concatMap(({ cartItems, product }) =>
         this._usersService
           .findOneById(userId)
-          .pipe(map((user) => ({ user, cartItems }))),
+          .pipe(map((user) => ({ user, cartItems, product }))),
       ),
-      map(({ user, cartItems }) => {
-        if (!cartItems) return { user, cartItems: [] };
-        return {
-          user,
-          cartItems: JSON.parse(cartItems),
-        };
-      }),
     );
   }
 
@@ -47,17 +46,19 @@ export class CartService {
     quantity: number,
   ): Observable<'OK'> {
     return this._getCart(userId, productId).pipe(
-      concatMap(({ cartItems }) => {
-        const product = cartItems.find((item) => item.productId === productId);
+      concatMap(({ cartItems, product }) => {
+        const cartItem = cartItems.find(
+          (item) => item.product.id === productId,
+        );
 
-        if (!product) {
+        if (!cartItem) {
           return this._redisClientService.set(
             `cart:${userId}`,
-            JSON.stringify([...cartItems, { productId, quantity }]),
+            JSON.stringify([...cartItems, { product, quantity }]),
           );
         }
 
-        product.quantity = quantity;
+        cartItem.quantity = quantity;
 
         return this._redisClientService.set(
           `cart:${userId}`,
@@ -68,7 +69,14 @@ export class CartService {
   }
 
   viewCart(userId: number): Observable<CartDto> {
-    return this._getCart(userId);
+    return this._getCart(userId).pipe(
+      map(({ cartItems, user }) =>
+        plainToInstance(CartDto, {
+          user,
+          cartItems,
+        }),
+      ),
+    );
   }
 
   deleteFromCart(userId: number, productId?: number) {
@@ -81,12 +89,14 @@ export class CartService {
           return this._redisClientService.del(`cart:${userId}`);
         }
 
-        const product = cartItems.find((item) => item.productId === productId);
+        const cartItem = cartItems.find(
+          (item) => item.product.id === productId,
+        );
 
-        if (!product) throw new NotFoundException('Product not found in cart');
+        if (!cartItem) throw new NotFoundException('Product not found in cart');
 
         const filteredCart = cartItems.filter(
-          (item) => item.productId !== productId,
+          (item) => item.product.id !== productId,
         );
 
         return this._redisClientService.set(
