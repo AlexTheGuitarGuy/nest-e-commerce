@@ -6,10 +6,12 @@ export const datasourceOptions: DataSourceOptions = {
   port: +(process.env['PG_PORT'] || 5432),
   username: process.env['PG_USERNAME'] || 'postgres',
   password: process.env['PG_PASSWORD'] || 'postgres',
-  entities: ['dist/**/*.entity.js'],
   database: process.env['PG_DATABASE'] || 'postgres',
   synchronize: true,
-  migrations: ['src/migrations/**/*.{ts,js}'],
+  logging: true,
+  entities: [`${__dirname}/entities/*.entity{.ts,.js}`],
+  migrations: [`${__dirname}/migrations/*{.ts,.js}`],
+  migrationsTableName: 'migrations',
 };
 
 export default new DataSource(datasourceOptions);
