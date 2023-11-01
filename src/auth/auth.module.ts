@@ -9,13 +9,14 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
+import { environment } from 'src/environments/environment';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     JwtModule.register({
       global: true,
-      secret: process.env['JWT_SECRET'] || '',
+      secret: environment.JWT_SECRET || '',
       signOptions: { expiresIn: '1d' },
     }),
     UsersModule,
