@@ -2,14 +2,15 @@ import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 import Redis from 'ioredis';
 import { Observable, from } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class RedisClientService {
   private _redisClient: Redis;
   constructor() {
     this._redisClient = new Redis({
-      host: process.env['REDIS_HOST'] || '',
-      port: parseInt(process.env['REDIS_PORT'] || '0'),
+      host: environment.REDIS_HOST || '',
+      port: environment.REDIS_PORT || 0,
     });
   }
 
