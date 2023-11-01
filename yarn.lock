@@ -1171,6 +1171,13 @@
   dependencies:
     "@types/express" "*"
 
+"@types/paypal-rest-sdk@^1.7.8":
+  version "1.7.8"
+  resolved "https://registry.yarnpkg.com/@types/paypal-rest-sdk/-/paypal-rest-sdk-1.7.8.tgz#534588e167af256141b72a9bd1d982b00322faea"
+  integrity sha512-P/Ay3RK+3Yk7jL/u+npDWJfluXXdXYAJzkS8/42tbGyWojrBF57dJCeobJLAZezIzbNcgr3wOBS5faYPebUaiw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/qs@*":
   version "6.9.9"
   resolved "https://registry.yarnpkg.com/@types/qs/-/qs-6.9.9.tgz#66f7b26288f6799d279edf13da7ccd40d2fa9197"
@@ -1952,7 +1959,7 @@ bson@^6.2.0:
   resolved "https://registry.yarnpkg.com/bson/-/bson-6.2.0.tgz#4b6acafc266ba18eeee111373c2699304a9ba0a3"
   integrity sha512-ID1cI+7bazPDyL9wYy9GaQ8gEEohWvcUl/Yf0dIdutJxnmInEEyCsb4awy/OiBfall7zBA179Pahi3vCdFze3Q==
 
-buffer-crc32@^0.2.13:
+buffer-crc32@^0.2.13, buffer-crc32@^0.2.3:
   version "0.2.13"
   resolved "https://registry.yarnpkg.com/buffer-crc32/-/buffer-crc32-0.2.13.tgz#0d333e3f00eac50aa1454abd30ef8c2a5d9a7242"
   integrity sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==
@@ -5042,6 +5049,14 @@ pause@0.0.1:
   resolved "https://registry.yarnpkg.com/pause/-/pause-0.0.1.tgz#1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d"
   integrity sha512-KG8UEiEVkR3wGEb4m5yZkVCzigAD+cVEJck2CzYZO37ZGJfctvVptVO192MwrtPhzONn6go8ylnOdMhKqi4nfg==
 
+paypal-rest-sdk@^1.8.1:
+  version "1.8.1"
+  resolved "https://registry.yarnpkg.com/paypal-rest-sdk/-/paypal-rest-sdk-1.8.1.tgz#5023fd42f43da628d18cc00d6bd566eacba74528"
+  integrity sha512-Trj2GuPn10GqpICAxQh5wjxuDT7rq7DMOkvyatz05wI5xPGmqXN7UC0WfDSF9WSBs4YdcWZP0g+nY+sOdaFggw==
+  dependencies:
+    buffer-crc32 "^0.2.3"
+    semver "^5.0.3"
+
 pbkdf2@^3.0.3:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/pbkdf2/-/pbkdf2-3.1.2.tgz#dd822aa0887580e52f1a039dc3eda108efae3075"
@@ -5516,6 +5531,11 @@ schema-utils@^3.1.1, schema-utils@^3.2.0:
     "@types/json-schema" "^7.0.8"
     ajv "^6.12.5"
     ajv-keywords "^3.5.2"
+
+semver@^5.0.3:
+  version "5.7.2"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-5.7.2.tgz#48d55db737c3287cd4835e17fa13feace1c41ef8"
+  integrity sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==
 
 semver@^6.0.0, semver@^6.3.0, semver@^6.3.1:
   version "6.3.1"

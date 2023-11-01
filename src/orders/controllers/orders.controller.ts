@@ -1,20 +1,29 @@
-import { Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { map } from 'rxjs';
 import { OrdersService } from '../services/orders.service';
 import { UserDto } from 'src/users/dto/user.dto';
+import { CreatePaymentDto } from '../dto/create-payment.dto';
 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly _ordersService: OrdersService) {}
 
-  @Post()
-  placeOrder(@Req() req: Request) {
+  @Post('create-payment')
+  createPayment(
+    @Body() { returnUrl, cancelUrl }: CreatePaymentDto,
+    @Req() req: Request,
+  ) {
     const user = req['user'] as UserDto;
-    return this._ordersService.placeOrder(user.id).pipe(
-      map(() => ({
-        message: 'Order placed successfully',
-      })),
-    );
+    return this._ordersService.createPayment(user.id, returnUrl, cancelUrl);
+  }
+
+  @Get('execute-payment')
+  executePayment(
+    @Query('paymentId') paymentId: string,
+    @Query('PayerID') payerId: string,
+    @Req() req: Request,
+  ) {
+    const user = req['user'] as UserDto;
+    return this._ordersService.executePayment(user.id, paymentId, payerId);
   }
 }
