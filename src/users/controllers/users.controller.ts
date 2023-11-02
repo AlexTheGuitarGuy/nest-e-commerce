@@ -34,7 +34,9 @@ export class UsersController {
   @Post()
   @Roles(Role.Admin)
   create(@Body() createUserDto: CreateUserDto) {
-    return this._usersService.create(createUserDto);
+    return this._usersService
+      .create(createUserDto)
+      .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Get()
@@ -59,15 +61,17 @@ export class UsersController {
 
   @Get('username')
   @UseInterceptors(ClassSerializerInterceptor)
-  findOneByUsername(
-    @Body() body: { username: string },
-  ): Observable<UserDto | undefined> {
-    return this._usersService.findOneByUsername(body.username);
+  findOneByUsername(@Body() body: { username: string }): Observable<UserDto> {
+    return this._usersService
+      .findOneByUsername(body.username)
+      .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Get(':id')
   findOneById(@Param('id', ParseIntPipe) id: number): Observable<UserDto> {
-    return this._usersService.findOneById(id);
+    return this._usersService
+      .findOneById(id)
+      .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Patch(':id')
@@ -86,7 +90,9 @@ export class UsersController {
         throw new UnauthorizedException();
     }
 
-    return this._usersService.updateOne(id, updateUserDto);
+    return this._usersService
+      .updateOne(id, updateUserDto)
+      .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Delete(':id')

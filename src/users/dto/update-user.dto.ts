@@ -8,11 +8,12 @@ import {
   MinLength,
 } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
+import { PayerDto } from 'src/orders/dto/payer.dto';
 
 export class UpdateUserDto {
   @IsEmail()
   @IsOptional()
-  email!: string;
+  email?: string;
 
   @IsOptional()
   @IsString()
@@ -27,13 +28,16 @@ export class UpdateUserDto {
         'A password contains at least one digit, one uppercase letter and one lowercase letter',
     },
   )
-  password!: string;
+  password?: string;
 
   @IsString()
   @IsOptional()
-  username!: string;
+  username?: string;
 
   @IsEnum(Role)
   @IsOptional()
-  role!: Role;
+  role?: Role;
+
+  @IsOptional()
+  payer?: PayerDto;
 }

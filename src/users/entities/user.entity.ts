@@ -1,7 +1,15 @@
 import { Exclude } from 'class-transformer';
+import { IsOptional } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
+import { PayerEntity } from 'src/orders/entities/payer.entity';
 import { ProductEntity } from 'src/products/entities/product.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class UserEntity {
@@ -23,4 +31,8 @@ export class UserEntity {
 
   @OneToMany(() => ProductEntity, (product) => product.seller)
   products!: ProductEntity[];
+
+  @IsOptional()
+  @OneToOne(() => PayerEntity, (payer) => payer.user)
+  payer?: PayerEntity;
 }
