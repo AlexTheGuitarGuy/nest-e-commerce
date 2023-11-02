@@ -9,12 +9,15 @@ import * as paypal from 'paypal-rest-sdk';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PayerEntity } from '../entities/payer.entity';
+import { PaymentEntity } from '../entities/payment.entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(PayerEntity)
     private readonly _payerRepository: Repository<PayerEntity>,
+    @InjectRepository(PaymentEntity, 'mongodb')
+    private readonly _paymentRepository: Repository<PaymentEntity>,
     private readonly _cartService: CartService,
   ) {}
 
@@ -64,25 +67,59 @@ export class OrdersService {
       }),
       concatMap((paypalPayment) => {
         return from(
-          new Promise((resolve, reject) => {
+          new Promise<paypal.PaymentResponse>((resolve, reject) => {
             paypal.payment.create(paypalPayment, (err, payment) => {
               if (err) reject(err);
-              else {
-                const redirectUrl =
-                  payment.links?.find((link) => link.rel === 'approval_url')
-                    ?.href || '';
-                resolve(redirectUrl);
-              }
+              else resolve(payment);
             });
+          }),
+        ).pipe(
+          concatMap((payment) =>
+            from(
+              this._payerRepository.findOne({
+                where: { user: { id: userId } },
+              }),
+            ).pipe(map((payer) => ({ payer, payment }))),
+          ),
+          concatMap(({ payer, payment }) => {
+            if (!payer) {
+              const payer = this._payerRepository.create({
+                user: { id: userId },
+              });
+
+              return from(this._payerRepository.save(payer)).pipe(
+                map((payer) => ({ payer, payment })),
+              );
+            }
+            return of({ payer, payment });
+          }),
+          concatMap(({ payer, payment }) => {
+            const newPayment = this._paymentRepository.create({
+              paymentResponse: payment,
+            });
+            return from(this._paymentRepository.save(newPayment)).pipe(
+              map(() => ({ payer, payment })),
+            );
+          }),
+          map(({ payment }) => {
+            const redirectUrl =
+              payment.links?.find((link) => link.rel === 'approval_url')
+                ?.href || '';
+
+            if (!redirectUrl) {
+              throw new BadRequestException('No redirect URL');
+            }
+
+            return { redirectUrl };
           }),
         );
       }),
     );
   }
 
-  public executePayment(userId: number, paymentId: string, payerId: string) {
+  public executePayment(_: number, paymentId: string, payerId: string) {
     return from(
-      new Promise((resolve, reject) => {
+      new Promise<paypal.PaymentResponse>((resolve, reject) => {
         paypal.payment.execute(
           paymentId,
           { payer_id: payerId },
@@ -93,9 +130,14 @@ export class OrdersService {
         );
       }),
     ).pipe(
-      concatMap((result) =>
-        this._cartService.deleteFromCart(userId).pipe(map(() => result)),
-      ),
+      concatMap((payment) => {
+        console.log('payment', payment);
+
+        return of(payment);
+        /* return this._cartService
+          .deleteFromCart(userId)
+          .pipe(map(() => payment)); */
+      }),
     );
   }
 
