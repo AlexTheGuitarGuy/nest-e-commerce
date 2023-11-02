@@ -7,6 +7,7 @@ import { Observable, from, concatMap, map, of, catchError, tap } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import {
+  DeleteResult,
   FindOptionsRelations,
   FindOptionsSelect,
   FindOptionsWhere,
@@ -73,7 +74,7 @@ export class UsersService {
     );
   }
 
-  removeOne(id: number): Observable<any> {
+  removeOne(id: number): Observable<DeleteResult> {
     return from(this._usersRepository.delete(id)).pipe(
       tap((deleted) => {
         if (deleted.affected === 0) {
