@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Observable, from, concatMap, map, of, catchError, tap } from 'rxjs';
@@ -14,8 +13,6 @@ import {
   Repository,
 } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { plainToInstance } from 'class-transformer';
-import { UserDto } from '../dto/user.dto';
 import { UserEntity } from '../entities/user.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { PostgresErrorCode } from 'src/common/enums/postgres-error-code.enum';
@@ -27,7 +24,7 @@ export class UsersService {
     private readonly _usersRepository: Repository<UserEntity>,
   ) {}
 
-  create(createUserDto: CreateUserDto): Observable<UserDto> {
+  create(createUserDto: CreateUserDto): Observable<UserEntity> {
     const { password, ...rest } = createUserDto;
 
     return from(bcrypt.hash(password, 10)).pipe(
@@ -42,7 +39,6 @@ export class UsersService {
       catchError((error: any) => {
         throw new BadRequestException(error.detail);
       }),
-      map((user) => plainToInstance(UserDto, user)),
     );
   }
 
@@ -87,13 +83,18 @@ export class UsersService {
     );
   }
 
-  findOneByUsername(username: string): Observable<UserDto | undefined> {
+  findOneByUsername(username: string): Observable<UserEntity> {
     return from(this._usersRepository.findOne({ where: { username } })).pipe(
-      map((user) => plainToInstance(UserDto, user)),
+      map((found) => {
+        if (!found) {
+          throw new NotFoundException(`User not found`);
+        }
+        return found;
+      }),
     );
   }
 
-  findOneById(id: number): Observable<UserDto> {
+  findOneById(id: number): Observable<UserEntity> {
     return from(this._usersRepository.findOne({ where: { id } })).pipe(
       map((found) => {
         if (!found) {
@@ -101,56 +102,48 @@ export class UsersService {
         }
         return found;
       }),
-      map((user) => plainToInstance(UserDto, user)),
     );
   }
 
-  validate(username: string, password: string): Observable<UserDto | null> {
+  validate(username: string, password: string): Observable<UserEntity | null> {
     return from(this._usersRepository.findOne({ where: { username } })).pipe(
       concatMap((user) => {
         if (!user || !bcrypt.compareSync(password, user.password))
           return of(null);
 
-        return from(this._usersRepository.save(user)).pipe(
-          map((user) => plainToInstance(UserDto, user)),
-        );
+        return from(this._usersRepository.save(user));
       }),
     );
   }
 
-  updateOne(id: number, updateUserDto: UpdateUserDto): Observable<UserDto> {
+  updateOne(id: number, updateUserDto: UpdateUserDto): Observable<UserEntity> {
     return from(this._usersRepository.findOne({ where: { id } })).pipe(
-      map((found) => {
-        if (!found) {
+      map((foundUser) => {
+        if (!foundUser) {
           throw new NotFoundException(`User with id ${id} not found`);
         }
-        return found;
+        return foundUser;
       }),
-      concatMap((found) => {
-        if (!updateUserDto.password) return of(found);
+      concatMap((foundUser) => {
+        if (!updateUserDto.password) return of(foundUser);
 
         return from(bcrypt.hash(updateUserDto.password, 10)).pipe(
           map((hashedPassword) => {
             updateUserDto.password = hashedPassword;
-            return found;
+            return foundUser;
           }),
         );
       }),
-      concatMap((found) => {
-        try {
-          const updated = this._usersRepository.merge(found, updateUserDto);
-          return from(this._usersRepository.save(updated));
-        } catch (error: any) {
-          if (error?.code === PostgresErrorCode.UniqueViolation) {
-            throw new BadRequestException('This user already exists');
-          }
-          throw new InternalServerErrorException('Failed to update user');
-        }
+      concatMap((foundUser) => {
+        const updated = this._usersRepository.merge(foundUser, updateUserDto);
+        return from(this._usersRepository.save(updated));
       }),
       catchError((error: any) => {
+        if (error?.code === PostgresErrorCode.UniqueViolation) {
+          throw new BadRequestException('This user already exists');
+        }
         throw new BadRequestException(error.detail);
       }),
-      map((user) => plainToInstance(UserDto, user)),
     );
   }
 }

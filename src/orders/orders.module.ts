@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
-import { OrdersController } from './controllers/orders.controller';
 import { CartModule } from 'src/cart/cart.module';
 import * as paypal from 'paypal-rest-sdk';
 import { environment } from 'src/environments/environment';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PayerEntity } from './entities/payer.entity';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   providers: [OrdersService],
-  controllers: [OrdersController],
-  imports: [CartModule],
+  imports: [CartModule, UsersModule, TypeOrmModule.forFeature([PayerEntity])],
 })
 export class OrdersModule {
   constructor() {

@@ -10,6 +10,7 @@ import { CartDto } from '../dto/cart.dto';
 import { ProductsService } from 'src/products/services/products.service';
 import { ProductDto } from 'src/products/dto/product.dto';
 import { plainToInstance } from 'class-transformer';
+import { UserDto } from 'src/users/dto/user.dto';
 
 @Injectable()
 export class CartService {
@@ -33,9 +34,10 @@ export class CartService {
           : of({ cartItems: cartItemsParsed, product: undefined });
       }),
       concatMap(({ cartItems, product }) =>
-        this._usersService
-          .findOneById(userId)
-          .pipe(map((user) => ({ user, cartItems, product }))),
+        this._usersService.findOneById(userId).pipe(
+          map((user) => plainToInstance(UserDto, user)),
+          map((user) => ({ user, cartItems, product })),
+        ),
       ),
     );
   }

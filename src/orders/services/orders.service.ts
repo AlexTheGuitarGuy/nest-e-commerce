@@ -1,11 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CartService } from 'src/cart/services/cart.service';
-import { concatMap, from, of, map } from 'rxjs';
+import { concatMap, from, of, map, Observable } from 'rxjs';
 import * as paypal from 'paypal-rest-sdk';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PayerEntity } from '../entities/payer.entity';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly _cartService: CartService) {}
+  constructor(
+    @InjectRepository(PayerEntity)
+    private readonly _payerRepository: Repository<PayerEntity>,
+    private readonly _cartService: CartService,
+  ) {}
 
   public createPayment(userId: number, returnUrl: string, cancelUrl: string) {
     return this._cartService.viewCart(userId).pipe(
@@ -85,6 +96,17 @@ export class OrdersService {
       concatMap((result) =>
         this._cartService.deleteFromCart(userId).pipe(map(() => result)),
       ),
+    );
+  }
+
+  public getPayerByPayerId(payerId: string): Observable<PayerEntity> {
+    return from(this._payerRepository.findOne({ where: { payerId } })).pipe(
+      map((payer) => {
+        if (!payer) {
+          throw new NotFoundException(`Payer with id ${payerId} not found`);
+        }
+        return payer;
+      }),
     );
   }
 }
