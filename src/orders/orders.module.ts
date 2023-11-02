@@ -6,10 +6,18 @@ import { environment } from 'src/environments/environment';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PayerEntity } from './entities/payer.entity';
 import { UsersModule } from 'src/users/users.module';
+import { OrdersController } from './controllers/orders.controller';
+import { PaymentEntity } from './entities/payment.entity';
 
 @Module({
   providers: [OrdersService],
-  imports: [CartModule, UsersModule, TypeOrmModule.forFeature([PayerEntity])],
+  controllers: [OrdersController],
+  imports: [
+    CartModule,
+    UsersModule,
+    TypeOrmModule.forFeature([PayerEntity]),
+    TypeOrmModule.forFeature([PaymentEntity], 'mongodb'),
+  ],
 })
 export class OrdersModule {
   constructor() {

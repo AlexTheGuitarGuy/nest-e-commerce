@@ -6,8 +6,8 @@ export class PayerEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ unique: true })
-  payerId!: string;
+  @Column({ unique: true, nullable: true })
+  payerId?: string;
 
   @OneToOne(() => UserEntity, (user) => user.payer)
   user!: UserEntity;

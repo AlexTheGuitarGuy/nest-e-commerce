@@ -1,12 +1,15 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 import { UserDto } from 'src/users/dto/user.dto';
 
 export class PayerDto {
   @IsNotEmpty()
   id!: number;
 
+  @IsOptional()
+  payerId?: string;
+
   @IsNotEmpty()
-  payerId!: string;
+  paymentIds!: string[];
 
   @IsNotEmpty()
   user!: UserDto;
