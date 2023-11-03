@@ -14,7 +14,7 @@ export class OrdersController {
     @Req() req: Request,
   ) {
     const user = req['user'] as UserDto;
-    return this._ordersService.createPayment(user.id, returnUrl, cancelUrl);
+    return this._ordersService.createPayment(user, returnUrl, cancelUrl);
   }
 
   @Get('execute-payment')
@@ -24,6 +24,6 @@ export class OrdersController {
     @Req() req: Request,
   ) {
     const user = req['user'] as UserDto;
-    return this._ordersService.executePayment(user.id, paymentId, payerId);
+    return this._ordersService.executePayment(user, paymentId, payerId);
   }
 }

@@ -8,14 +8,13 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './core/database/database.module';
 import { postgresConfig } from './core/database/postgres/postgres.config';
 import { OrdersModule } from './orders/orders.module';
-import { mongodbConfig } from './core/database/mongodb/mongodb.config';
 
 @Module({
   imports: [
     DatabaseModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [postgresConfig, mongodbConfig],
+      load: [postgresConfig],
     }),
     AuthModule,
     UsersModule,
