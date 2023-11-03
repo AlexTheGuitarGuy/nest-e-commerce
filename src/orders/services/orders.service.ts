@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CartService } from 'src/cart/services/cart.service';
-import { concatMap, from, of, map, tap } from 'rxjs';
+import { concatMap, from, of, map, tap, Observable } from 'rxjs';
 import * as paypal from 'paypal-rest-sdk';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -92,9 +92,17 @@ export class OrdersService {
       }),
       concatMap((payment) => {
         const newPayment = new this._paymentSchema({
-          paymentResponse: payment,
+          paymentResponse: {
+            ...payment,
+            payer: {
+              ...payment.payer,
+              payer_info: { payer_id: user.payer?.payerId },
+            },
+          },
         });
-        return from(newPayment.save()).pipe(map(() => payment));
+        return from(newPayment.save()).pipe(
+          map(() => newPayment.paymentResponse),
+        );
       }),
     );
   }
@@ -164,13 +172,20 @@ export class OrdersService {
     );
   }
 
-  public getOrderHistory(user: UserDto) {
-    if (!user.payer?.payerId) return of([]);
+  public getOrderHistory(
+    user: UserDto,
+  ): Observable<{ count: number; payments: Payment[] }> {
+    if (!user.payer?.payerId) return of({ count: 0, payments: [] });
 
     return from(
       this._paymentSchema.find({
         'paymentResponse.payer.payer_info.payer_id': user.payer?.payerId,
       }),
+    ).pipe(
+      map((payments) => ({
+        count: (payments as Payment[]).length,
+        payments: payments as Payment[],
+      })),
     );
   }
 }
