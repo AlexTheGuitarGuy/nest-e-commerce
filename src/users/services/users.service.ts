@@ -96,7 +96,9 @@ export class UsersService {
   }
 
   findOneById(id: number): Observable<UserEntity> {
-    return from(this._usersRepository.findOne({ where: { id } })).pipe(
+    return from(
+      this._usersRepository.findOne({ where: { id }, relations: ['payer'] }),
+    ).pipe(
       map((found) => {
         if (!found) {
           throw new NotFoundException(`User not found`);
