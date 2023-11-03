@@ -6,6 +6,7 @@ import { ProductEntity } from 'src/products/entities/product.entity';
 import {
   Column,
   Entity,
+  JoinColumn,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -34,5 +35,6 @@ export class UserEntity {
 
   @IsOptional()
   @OneToOne(() => PayerEntity, (payer) => payer.user)
+  @JoinColumn({ name: 'payer_id' })
   payer?: PayerEntity;
 }

@@ -9,8 +9,5 @@ export class PayerDto {
   payerId?: string;
 
   @IsNotEmpty()
-  paymentIds!: string[];
-
-  @IsNotEmpty()
   user!: UserDto;
 }

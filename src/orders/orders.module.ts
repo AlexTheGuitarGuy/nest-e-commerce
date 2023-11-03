@@ -7,7 +7,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PayerEntity } from './entities/payer.entity';
 import { UsersModule } from 'src/users/users.module';
 import { OrdersController } from './controllers/orders.controller';
-import { PaymentEntity } from './entities/payment.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Payment, PaymentSchema } from './entities/payment.schema';
 
 @Module({
   providers: [OrdersService],
@@ -16,7 +17,7 @@ import { PaymentEntity } from './entities/payment.entity';
     CartModule,
     UsersModule,
     TypeOrmModule.forFeature([PayerEntity]),
-    TypeOrmModule.forFeature([PaymentEntity], 'mongodb'),
+    MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
   ],
 })
 export class OrdersModule {
