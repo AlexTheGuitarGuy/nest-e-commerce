@@ -107,7 +107,12 @@ export class UsersService {
   }
 
   validate(username: string, password: string): Observable<UserEntity | null> {
-    return from(this._usersRepository.findOne({ where: { username } })).pipe(
+    return from(
+      this._usersRepository.findOne({
+        where: { username },
+        relations: ['payer'],
+      }),
+    ).pipe(
       concatMap((user) => {
         if (!user || !bcrypt.compareSync(password, user.password))
           return of(null);
