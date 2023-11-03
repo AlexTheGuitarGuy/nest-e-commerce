@@ -26,4 +26,10 @@ export class OrdersController {
     const user = req['user'] as UserDto;
     return this._ordersService.executePayment(user, paymentId, payerId);
   }
+
+  @Get('history')
+  getOrderHistory(@Req() req: Request) {
+    const user = req['user'] as UserDto;
+    return this._ordersService.getOrderHistory(user);
+  }
 }

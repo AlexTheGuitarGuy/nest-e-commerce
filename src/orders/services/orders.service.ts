@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CartService } from 'src/cart/services/cart.service';
-import { concatMap, from, of, map, tap, Observable } from 'rxjs';
+import { concatMap, from, of, map, tap } from 'rxjs';
 import * as paypal from 'paypal-rest-sdk';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -164,16 +164,12 @@ export class OrdersService {
     );
   }
 
-  public getUserPaymentHistory(user: UserDto): Observable<any> {
-    console.log('user', user);
+  public getOrderHistory(user: UserDto) {
+    if (!user.payer?.payerId) return of([]);
 
     return from(
       this._paymentSchema.find({
         'paymentResponse.payer.payer_info.payer_id': user.payer?.payerId,
-      }),
-    ).pipe(
-      tap((payments) => {
-        console.log('payments', payments);
       }),
     );
   }
