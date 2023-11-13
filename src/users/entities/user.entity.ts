@@ -37,4 +37,7 @@ export class UserEntity {
   @OneToOne(() => PayerEntity, (payer) => payer.user)
   @JoinColumn({ name: 'payer_id' })
   payer?: PayerEntity;
+
+  @Column()
+  address!: string;
 }

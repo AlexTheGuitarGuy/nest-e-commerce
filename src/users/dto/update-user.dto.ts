@@ -40,4 +40,8 @@ export class UpdateUserDto {
 
   @IsOptional()
   payer?: PayerDto;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
 }
