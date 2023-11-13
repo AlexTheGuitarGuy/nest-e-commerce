@@ -1,3 +1,4 @@
+import Joi from '@hapi/joi';
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 import Redis from 'ioredis';
@@ -8,10 +9,15 @@ import { environment } from 'src/environments/environment';
 export class RedisClientService {
   private _redisClient: Redis;
   constructor() {
-    this._redisClient = new Redis({
-      host: environment.REDIS_HOST || '',
-      port: environment.REDIS_PORT || 0,
-    });
+    this._redisClient = new Redis(
+      Joi.object({
+        host: Joi.string().required(),
+        port: Joi.number().required(),
+      }).validate({
+        host: environment.REDIS_HOST,
+        port: environment.REDIS_PORT,
+      }).value,
+    );
   }
 
   get(key: string): Observable<string | null> {

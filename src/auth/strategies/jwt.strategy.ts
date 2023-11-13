@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserDto } from 'src/users/dto/user.dto';
 import { Request } from 'express';
 import { environment } from 'src/environments/environment';
+import Joi from '@hapi/joi';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,7 +14,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         JwtStrategy.extractJWTFromCookie,
       ]),
       ignoreExpiration: false,
-      secretOrKey: environment.JWT_SECRET,
+      ...Joi.object({
+        secretOrKey: Joi.string().required(),
+      }).validate({
+        secretOrKey: environment.JWT_SECRET,
+      }).value,
     });
   }
 

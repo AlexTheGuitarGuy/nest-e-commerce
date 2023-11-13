@@ -10,13 +10,18 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
 import { environment } from 'src/environments/environment';
+import Joi from '@hapi/joi';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     JwtModule.register({
       global: true,
-      secret: environment.JWT_SECRET || '',
+      ...Joi.object({
+        secret: Joi.string().required(),
+      }).validate({
+        secret: environment.JWT_SECRET,
+      }).value,
       signOptions: { expiresIn: '1d' },
     }),
     UsersModule,
