@@ -75,23 +75,21 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(
+  @Roles(Role.Admin)
+  updateAdmin(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-    @Req() req: Request,
   ) {
-    if (
-      (req.user as UserDto).id !== id &&
-      (req.user as UserDto).role !== Role.Admin
-    ) {
-      if ((req.user as UserDto).role !== Role.Admin)
-        throw new ForbiddenException();
-      else if ((req.user as UserDto).id !== id)
-        throw new UnauthorizedException();
-    }
-
     return this._usersService
       .updateOne(id, updateUserDto)
+      .pipe(map((user) => plainToInstance(UserDto, user)));
+  }
+
+  @Patch()
+  update(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
+    const userId = (req.user as UserDto).id;
+    return this._usersService
+      .updateOne(userId, updateUserDto)
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
