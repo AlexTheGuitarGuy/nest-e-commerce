@@ -11,6 +11,7 @@ import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
 import { environment } from 'src/environments/environment';
 import Joi from '@hapi/joi';
+import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import Joi from '@hapi/joi';
       signOptions: { expiresIn: '1d' },
     }),
     UsersModule,
+    EmailConfirmationModule,
   ],
   controllers: [AuthController],
   providers: [

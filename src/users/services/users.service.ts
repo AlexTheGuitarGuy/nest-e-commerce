@@ -154,4 +154,21 @@ export class UsersService {
       }),
     );
   }
+
+  markEmailAsConfirmed(email: string): Observable<UserEntity> {
+    return from(this._usersRepository.findOne({ where: { email } })).pipe(
+      map((foundUser) => {
+        if (!foundUser) {
+          throw new NotFoundException(`User with email ${email} not found`);
+        } else if (foundUser.isEmailConfirmed) {
+          throw new BadRequestException('Email already confirmed');
+        }
+        return foundUser;
+      }),
+      concatMap((foundUser) => {
+        foundUser.isEmailConfirmed = true;
+        return from(this._usersRepository.save(foundUser));
+      }),
+    );
+  }
 }
