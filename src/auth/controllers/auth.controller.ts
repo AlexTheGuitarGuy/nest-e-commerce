@@ -15,10 +15,16 @@ import { Public } from '../decorators/public.decorator';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserDto } from 'src/users/dto/user.dto';
 import dayjs from 'dayjs';
+import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
+import { concatMap, map } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly _authService: AuthService) {}
+  constructor(
+    private readonly _authService: AuthService,
+    private readonly _emailConfirmationService: EmailConfirmationService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Public()
@@ -44,8 +50,29 @@ export class AuthController {
   }
 
   @Post('register')
-  register(@Body() user: CreateUserDto) {
-    return this._authService.register(user);
+  @Public()
+  register(@Body() createUser: CreateUserDto, @Res() res: Response) {
+    return this._authService.register(createUser).pipe(
+      concatMap((user) =>
+        this._emailConfirmationService
+          .sendVerificationLink(
+            user.email,
+            environment.EMAIL_CONFIRMATION_REDIRECT_URL,
+          )
+          .pipe(map(() => user)),
+      ),
+      map((user) => {
+        const { access_token } = this._authService.login(user);
+        res.cookie('access_token', access_token, {
+          httpOnly: true,
+          secure: false,
+
+          sameSite: 'lax',
+          expires: dayjs().add(1, 'day').toDate(),
+        });
+        return res.send({ message: 'Registration successful' });
+      }),
+    );
   }
 
   @UseGuards(JwtAuthGuard)

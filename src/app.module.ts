@@ -8,6 +8,10 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './core/database/database.module';
 import { postgresConfig } from './core/database/postgres/postgres.config';
 import { OrdersModule } from './orders/orders.module';
+import { EmailModule } from './email/email.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { EmailScheduleModule } from './email-schedule/email-schedule.module';
+import { EmailConfirmationModule } from './email-confirmation/email-confirmation.module';
 
 @Module({
   imports: [
@@ -22,6 +26,10 @@ import { OrdersModule } from './orders/orders.module';
     CartModule,
     RedisClientModule,
     OrdersModule,
+    EmailModule,
+    ScheduleModule.forRoot(),
+    EmailScheduleModule,
+    EmailConfirmationModule,
   ],
 })
 export class AppModule {}

@@ -29,4 +29,7 @@ export class UserDto {
 
   @IsString()
   address!: string;
+
+  @IsNotEmpty()
+  isEmailConfirmed!: boolean;
 }
