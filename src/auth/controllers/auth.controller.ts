@@ -17,6 +17,7 @@ import dayjs from 'dayjs';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 import { concatMap, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { EmailConfirmationBypassed } from 'src/email-confirmation/decorators/email-confirmation-bypassed.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -42,6 +43,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @EmailConfirmationBypassed()
   logout(@Res() res: Response) {
     res.clearCookie('access_token').send({
       message: 'Logout successful',
@@ -75,6 +77,7 @@ export class AuthController {
   }
 
   @Get('profile')
+  @EmailConfirmationBypassed()
   getProfile(@Req() req: Request) {
     return req.user;
   }
