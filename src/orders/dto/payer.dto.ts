@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { UserDto } from 'src/users/dto/user.dto';
 
 export class PayerDto {
@@ -6,6 +6,7 @@ export class PayerDto {
   id!: number;
 
   @IsOptional()
+  @IsString()
   payerId?: string;
 
   @IsNotEmpty()

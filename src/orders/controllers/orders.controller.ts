@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { concatMap, from, map } from 'rxjs';
 import { OrdersService } from '../services/orders.service';
@@ -31,9 +39,9 @@ export class OrdersController {
     return this._ordersService.executePayment(user, paymentId, payerId);
   }
 
-  @Get('cancel-payment')
-  cancelPayment() {
-    throw new Error('Method not implemented.');
+  @Delete('cancel-payment')
+  cancelPayment(@Query('paymentId') paymentId: string) {
+    return this._ordersService.cancelPayment(paymentId);
   }
 
   @Get('history')
