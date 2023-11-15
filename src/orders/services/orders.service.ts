@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Payment } from '../entities/payment.schema';
 import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
+import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class OrdersService {
@@ -20,7 +21,7 @@ export class OrdersService {
     private readonly _cartService: CartService,
   ) {}
 
-  public createPayment(user: UserDto, returnUrl: string, cancelUrl: string) {
+  public createPayment(user: UserDto) {
     return this._cartService.viewCart(user.id).pipe(
       concatMap((cart) => {
         if (!cart.cartItems.length) throw new BadRequestException('Empty cart');
@@ -39,8 +40,8 @@ export class OrdersService {
             payment_method: 'paypal',
           },
           redirect_urls: {
-            return_url: returnUrl,
-            cancel_url: cancelUrl,
+            return_url: environment.PAYPAL_RETURN_URL,
+            cancel_url: environment.PAYPAL_CANCEL_URL,
           },
           transactions: [
             {

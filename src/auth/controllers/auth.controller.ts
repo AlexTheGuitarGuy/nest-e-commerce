@@ -13,9 +13,8 @@ import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Public } from '../decorators/public.decorator';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserDto } from 'src/users/dto/user.dto';
-import dayjs from 'dayjs';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
-import { concatMap, map } from 'rxjs';
+import { concatMap, map, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { EmailConfirmationBypassed } from 'src/email-confirmation/decorators/email-confirmation-bypassed.decorator';
 
@@ -30,16 +29,9 @@ export class AuthController {
   @Public()
   @Post('login')
   login(@Req() req: Request, @Res() res: Response) {
-    const { access_token } = this._authService.login(req.user as UserDto);
+    this._authService.login(req.user as UserDto, res);
 
-    res
-      .cookie('access_token', access_token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        expires: dayjs().add(1, 'day').toDate(),
-      })
-      .send({ message: 'Login successful' });
+    res.send({ message: 'Login successful' });
   }
 
   @Post('logout')
@@ -62,16 +54,9 @@ export class AuthController {
           )
           .pipe(map(() => user)),
       ),
-      map((user) => {
-        const { access_token } = this._authService.login(user);
-        res.cookie('access_token', access_token, {
-          httpOnly: true,
-          secure: false,
-
-          sameSite: 'lax',
-          expires: dayjs().add(1, 'day').toDate(),
-        });
-        return res.send({ message: 'Registration successful' });
+      tap((user) => {
+        this._authService.login(user, res);
+        res.send({ message: 'Registration successful' });
       }),
     );
   }

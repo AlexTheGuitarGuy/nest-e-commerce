@@ -1,5 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import dayjs from 'dayjs';
+import { Response } from 'express';
+
 import { EmailService } from 'src/email/services/email.service';
 import { VerificationTokenPayload } from '../interfaces/verification-token-payload';
 import { UserDto } from 'src/users/dto/user.dto';
@@ -46,6 +49,21 @@ export class EmailConfirmationService {
 
   confirmEmail(email: string) {
     return this._userService.markEmailAsConfirmed(email);
+  }
+
+  updateUserJwt(user: UserDto, res: Response) {
+    const payload = { ...user, sub: user.id, password: void 0 };
+    const access_token = this._jwtService.sign(payload);
+    res.clearCookie('access_token');
+
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      expires: dayjs()
+        .add(environment.JWT_SESSION_DURATION, 'seconds')
+        .toDate(),
+    });
   }
 
   decodeConfirmationToken(token: string) {
