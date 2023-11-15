@@ -110,16 +110,15 @@ export class OrdersService {
 
   public executePayment(user: UserDto, paymentId: string, payerId: string) {
     return from(
-      new Promise<paypal.PaymentResponse>((resolve, reject) => {
-        paypal.payment.get(paymentId, (err, payment) => {
-          if (err) reject(err);
-          else resolve(payment);
-        });
+      this._paymentSchema.findOne({
+        'paymentResponse.id': paymentId,
       }),
     ).pipe(
       tap((payment) => {
-        if (payment.state !== 'created')
+        if (payment?.paymentResponse.state === 'approved')
           throw new BadRequestException('Payment already executed');
+        if (payment?.paymentResponse.state === 'cancelled')
+          throw new BadRequestException('Payment already cancelled');
       }),
       concatMap(
         () =>
@@ -147,29 +146,61 @@ export class OrdersService {
             map(() => payment),
           );
         } else if (!payer.payerId) {
-          payer.payerId = payerId;
-          return from(this._payerRepository.save(payer)).pipe(
-            map(() => payment),
-          );
+          return from(
+            this._payerRepository.update(
+              { id: user.payer?.id },
+              { payerId: (payment.payer as any).payer_info.payer_id },
+            ),
+          ).pipe(map(() => payment));
         }
 
         return of(payment);
       }),
       concatMap((payment) => {
-        const updatedPayment = new this._paymentSchema({
-          paymentResponse: payment,
-        });
         return from(
           this._paymentSchema.findOneAndUpdate(
             { 'paymentResponse.id': paymentId },
-            { paymentResponse: updatedPayment.paymentResponse },
-            { new: true },
+            { $set: { paymentResponse: payment } },
           ),
         ).pipe(map(() => payment));
       }),
       concatMap((payment) =>
         this._cartService.deleteFromCart(user.id).pipe(map(() => payment)),
       ),
+    );
+  }
+
+  public cancelPayment(paymentId: string) {
+    return from(
+      this._paymentSchema.findOne({
+        'paymentResponse.id': paymentId,
+      }),
+    ).pipe(
+      concatMap((payment) => {
+        if (!payment) throw new BadRequestException('Payment not found');
+        if (payment.paymentResponse.state === 'approved')
+          throw new BadRequestException('Payment already executed');
+        if (payment.paymentResponse.state === 'cancelled')
+          throw new BadRequestException('Payment already cancelled');
+
+        return from(
+          this._paymentSchema.updateOne(
+            { 'paymentResponse.id': paymentId },
+            { $set: { 'paymentResponse.state': 'cancelled' } },
+          ),
+        ).pipe(
+          map(() => {
+            const plainPayment = payment.toObject();
+            return {
+              ...plainPayment,
+              paymentResponse: {
+                ...plainPayment.paymentResponse,
+                state: 'cancelled',
+              },
+            };
+          }),
+        );
+      }),
     );
   }
 
