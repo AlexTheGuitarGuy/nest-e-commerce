@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { concatMap, from, map } from 'rxjs';
 import { OrdersService } from '../services/orders.service';
 import { UserDto } from 'src/users/dto/user.dto';
-import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UsersService } from 'src/users/services/users.service';
@@ -17,12 +16,9 @@ export class OrdersController {
   ) {}
 
   @Post('create-payment')
-  createPayment(
-    @Body() { returnUrl, cancelUrl }: CreatePaymentDto,
-    @Req() req: Request,
-  ) {
+  createPayment(@Req() req: Request) {
     const user = req['user'] as UserDto;
-    return this._ordersService.createPayment(user, returnUrl, cancelUrl);
+    return this._ordersService.createPayment(user);
   }
 
   @Get('execute-payment')
@@ -33,6 +29,11 @@ export class OrdersController {
   ) {
     const user = req['user'] as UserDto;
     return this._ordersService.executePayment(user, paymentId, payerId);
+  }
+
+  @Get('cancel-payment')
+  cancelPayment() {
+    throw new Error('Method not implemented.');
   }
 
   @Get('history')
