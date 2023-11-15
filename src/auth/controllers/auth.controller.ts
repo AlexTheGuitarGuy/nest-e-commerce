@@ -10,7 +10,6 @@ import {
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserDto } from 'src/users/dto/user.dto';
@@ -75,7 +74,6 @@ export class AuthController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Req() req: Request) {
     return req.user;
