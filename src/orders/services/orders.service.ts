@@ -10,6 +10,7 @@ import { Payment } from '../entities/payment.schema';
 import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
 import { environment } from 'src/environments/environment';
+import { EmailService } from 'src/email/services/email.service';
 
 @Injectable()
 export class OrdersService {
@@ -19,6 +20,7 @@ export class OrdersService {
     @InjectModel(Payment.name)
     private readonly _paymentSchema: Model<Payment>,
     private readonly _cartService: CartService,
+    private readonly _emailService: EmailService,
   ) {}
 
   public createPayment(user: UserDto) {
@@ -40,8 +42,8 @@ export class OrdersService {
             payment_method: 'paypal',
           },
           redirect_urls: {
-            return_url: environment.PAYPAL_RETURN_URL,
-            cancel_url: environment.PAYPAL_CANCEL_URL,
+            return_url: `${environment.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=true`,
+            cancel_url: `${environment.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=false`,
           },
           transactions: [
             {
@@ -108,6 +110,31 @@ export class OrdersService {
     );
   }
 
+  public paypalEmail(
+    user: UserDto,
+    shouldContinue: boolean,
+    paymentId?: string,
+    payerId?: string,
+  ) {
+    return shouldContinue
+      ? this._emailService.sendEmail({
+          to: user.email,
+          subject: 'Payment confirmation',
+          text: `Please confirm your payment before proceeding.\n
+      If you have already confirmed your payment, please ignore this email.\n
+      Payment ID: ${paymentId}\n
+      Payer ID: ${payerId}\n
+      Click on the link to confirm your payment: ${environment.PAYPAL_CONFIRM_URL}?paymentId=${paymentId}&PayerID=${payerId}\n
+      Click on the link to cancel your payment: ${environment.PAYPAL_CANCEL_URL}?paymentId=${paymentId}&PayerID=${payerId}\n
+      `,
+        })
+      : this._emailService.sendEmail({
+          to: user.email,
+          subject: 'Payment cancelation',
+          text: `Your payment has been cancelled.`,
+        });
+  }
+
   public executePayment(user: UserDto, paymentId: string, payerId: string) {
     return from(
       this._paymentSchema.findOne({
@@ -164,13 +191,31 @@ export class OrdersService {
           ),
         ).pipe(map(() => payment));
       }),
+      map((payment) => {
+        return this._emailService
+          .sendEmail({
+            to: user.email,
+            subject: 'Payment successful',
+            text: `
+            Your payment was successful.\n
+            Payment ID: ${paymentId}\n
+            Payer ID: ${payerId}\n
+            Amount: ${payment.transactions[0].amount.total}\n
+            Currency: ${payment.transactions[0].amount.currency}\n
+            Items: ${payment.transactions[0].item_list?.items
+              .map((item) => `${item.name} x ${item.quantity}`)
+              .join(', ')}\n
+            `,
+          })
+          .pipe(map((payment) => payment));
+      }),
       concatMap((payment) =>
         this._cartService.deleteFromCart(user.id).pipe(map(() => payment)),
       ),
     );
   }
 
-  public cancelPayment(paymentId: string) {
+  public cancelPayment(user: UserDto, paymentId: string, payerId: string) {
     return from(
       this._paymentSchema.findOne({
         'paymentResponse.id': paymentId,
@@ -200,6 +245,24 @@ export class OrdersService {
             };
           }),
         );
+      }),
+      map((payment) => {
+        return this._emailService.sendEmail({
+          to: user.email,
+          subject: 'Payment cancelled',
+          text: `
+            Your payment was cancelled.\n
+            Payment ID: ${paymentId}\n
+            Payer ID: ${payerId}\n
+            Amount: ${payment.paymentResponse.transactions[0].amount.total}\n
+            Currency: ${
+              payment.paymentResponse.transactions[0].amount.currency
+            }\n
+            Items: ${payment.paymentResponse.transactions[0].item_list?.items
+              .map((item) => `${item.name} x ${item.quantity}`)
+              .join(', ')}\n
+            `,
+        });
       }),
     );
   }

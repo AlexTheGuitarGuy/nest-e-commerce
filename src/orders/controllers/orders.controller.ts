@@ -29,6 +29,22 @@ export class OrdersController {
     return this._ordersService.createPayment(user);
   }
 
+  @Get('payment-redirect')
+  paymentRedirect(
+    @Query('shouldContinue') shouldContinue: boolean,
+    @Req() req: Request,
+    @Query('paymentId') paymentId?: string,
+    @Query('PayerID') payerId?: string,
+  ) {
+    const user = req['user'] as UserDto;
+    return this._ordersService.paypalEmail(
+      user,
+      shouldContinue,
+      paymentId,
+      payerId,
+    );
+  }
+
   @Get('execute-payment')
   executePayment(
     @Query('paymentId') paymentId: string,
@@ -36,12 +52,25 @@ export class OrdersController {
     @Req() req: Request,
   ) {
     const user = req['user'] as UserDto;
-    return this._ordersService.executePayment(user, paymentId, payerId);
+    return this._ordersService.executePayment(user, paymentId, payerId).pipe(
+      map(() => ({
+        message: 'Payment executed successfully',
+      })),
+    );
   }
 
   @Delete('cancel-payment')
-  cancelPayment(@Query('paymentId') paymentId: string) {
-    return this._ordersService.cancelPayment(paymentId);
+  cancelPayment(
+    @Query('paymentId') paymentId: string,
+    @Query('PayerID') payerId: string,
+    @Req() req: Request,
+  ) {
+    const user = req['user'] as UserDto;
+    return this._ordersService.cancelPayment(user, paymentId, payerId).pipe(
+      map(() => ({
+        message: 'Payment cancelled successfully',
+      })),
+    );
   }
 
   @Get('history')
