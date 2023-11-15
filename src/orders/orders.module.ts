@@ -10,6 +10,7 @@ import { OrdersController } from './controllers/orders.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Payment, PaymentSchema } from './entities/payment.schema';
 import Joi from '@hapi/joi';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   providers: [OrdersService],
@@ -19,6 +20,7 @@ import Joi from '@hapi/joi';
     UsersModule,
     TypeOrmModule.forFeature([PayerEntity]),
     MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
+    EmailModule,
   ],
 })
 export class OrdersModule {
