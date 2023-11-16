@@ -8,6 +8,8 @@ import { plainToInstance } from 'class-transformer';
 import { Response } from 'express';
 import dayjs from 'dayjs';
 import { environment } from 'src/environments/environment';
+import { RegisterDto } from '../dto/register.dto';
+import { Role } from 'src/common/enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -38,9 +40,14 @@ export class AuthService {
     return res;
   }
 
-  register(data: CreateUserDto) {
+  register(data: RegisterDto) {
+    const registeringUser = plainToInstance(CreateUserDto, {
+      ...data,
+      role: Role.Customer,
+    });
+
     return this._usersService
-      .create(data)
+      .create(registeringUser)
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 }
