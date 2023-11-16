@@ -11,12 +11,12 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserDto } from 'src/users/dto/user.dto';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 import { concatMap, map, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { EmailConfirmationBypassed } from 'src/email-confirmation/decorators/email-confirmation-bypassed.decorator';
+import { RegisterDto } from '../dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -44,7 +44,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
-  register(@Body() createUser: CreateUserDto, @Res() res: Response) {
+  register(@Body() createUser: RegisterDto, @Res() res: Response) {
     return this._authService.register(createUser).pipe(
       concatMap((user) =>
         this._emailConfirmationService
