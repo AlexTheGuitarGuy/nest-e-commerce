@@ -36,6 +36,27 @@ export class EmailConfirmationService {
     });
   }
 
+  sendPasswordResetLink(
+    email: string,
+    newPassword: string,
+    redirectUrl: string,
+  ) {
+    const payload = { hashedPassword: newPassword };
+
+    const token = this._jwtService.sign(payload, {
+      secret: environment.JWT_PASSWORD_RESET_TOKEN_SECRET,
+      expiresIn: `${environment.JWT_PASSWORD_RESET_TOKEN_EXPIRATION_TIME}s`,
+    });
+
+    const text = `To reset your password, click on the link: ${redirectUrl}?token=${token}`;
+
+    return this._emailService.sendEmail({
+      to: email,
+      subject: 'Password reset',
+      text,
+    });
+  }
+
   resendVerificationLink(user: UserDto) {
     if (user.isEmailConfirmed) {
       throw new BadRequestException('Email already confirmed');
@@ -84,15 +105,21 @@ export class EmailConfirmationService {
     }
   }
 
-  sendPasswordResetLink(
-    email: string,
-    newPassword: string,
-    redirectUrl: string,
-  ) {
-    return this._emailService.sendEmail({
-      to: email,
-      subject: 'Password reset',
-      text: `To reset your password, click on the link: ${redirectUrl}?hashedPassword=${newPassword}`,
-    });
+  decodePasswordResetToken(token: string) {
+    try {
+      const payload = this._jwtService.verify(token, {
+        secret: environment.JWT_PASSWORD_RESET_TOKEN_SECRET,
+      });
+
+      if ('hashedPassword' in payload) {
+        return payload.hashedPassword;
+      }
+      throw new BadRequestException();
+    } catch (error: any) {
+      if (error.name === 'TokenExpiredError') {
+        throw new BadRequestException('Password reset token expired');
+      }
+      throw new BadRequestException('Bad password reset token');
+    }
   }
 }

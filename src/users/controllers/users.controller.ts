@@ -74,19 +74,6 @@ export class UsersController {
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
-  @Patch('password')
-  updatePassword(
-    @Query('hashedPassword') hashedPassword: string,
-    @Req() req: Request,
-  ) {
-    const userId = (req.user as UserDto).id;
-    return this._usersService.updatePassword(userId, hashedPassword).pipe(
-      map(() => ({
-        message: 'Password updated',
-      })),
-    );
-  }
-
   @Patch(':id')
   @Roles(Role.Admin)
   updateAdmin(
