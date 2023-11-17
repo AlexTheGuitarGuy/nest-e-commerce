@@ -16,9 +16,9 @@ export class EmailConfirmationController {
 
   @Post('email-confirm')
   @EmailConfirmationBypassed()
-  confirm(@Query('token') token: string, @Res() res: Response) {
+  confirmEmail(@Query('token') token: string, @Res() res: Response) {
     const email: string =
-      this._emailConfirmationService.decodeConfirmationToken(token);
+      this._emailConfirmationService.decodeEmailConfirmationToken(token);
     return this._emailConfirmationService.confirmEmail(email).pipe(
       map((user) => plainToInstance(UserDto, user)),
       map((user) => {
@@ -28,15 +28,17 @@ export class EmailConfirmationController {
     );
   }
 
-  @Post('resend-confirmation-link')
+  @Post('resend-email-confirmation-link')
   @EmailConfirmationBypassed()
-  resendConfirmationLink(@Req() req: Request) {
+  resendEmailConfirmationLink(@Req() req: Request) {
     const user = req.user as UserDto;
-    return this._emailConfirmationService.resendVerificationLink(user).pipe(
-      map(() => ({
-        message: `Verification link resent to ${user.email}`,
-      })),
-    );
+    return this._emailConfirmationService
+      .resendEmailConfirmationLink(user)
+      .pipe(
+        map(() => ({
+          message: `Verification link resent to ${user.email}`,
+        })),
+      );
   }
 
   @Post('password-reset-confirm')

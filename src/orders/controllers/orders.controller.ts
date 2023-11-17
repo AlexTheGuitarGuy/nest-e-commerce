@@ -15,12 +15,14 @@ import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UsersService } from 'src/users/services/users.service';
 import { plainToInstance } from 'class-transformer';
+import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 
 @Controller('orders')
 export class OrdersController {
   constructor(
     private readonly _ordersService: OrdersService,
     private readonly _usersService: UsersService,
+    private readonly _emailConfirmationService: EmailConfirmationService,
   ) {}
 
   @Post('create-payment')
@@ -29,15 +31,15 @@ export class OrdersController {
     return this._ordersService.createPayment(user);
   }
 
-  @Get('payment-redirect')
-  paymentRedirect(
+  @Post('send-payment-confirm-email')
+  sendPaymentConfirmEmail(
     @Query('shouldContinue') shouldContinue: boolean,
     @Req() req: Request,
     @Query('paymentId') paymentId?: string,
     @Query('PayerID') payerId?: string,
   ) {
     const user = req['user'] as UserDto;
-    return this._ordersService.paypalEmail(
+    return this._emailConfirmationService.sendPaypalOrderEmail(
       user,
       shouldContinue,
       paymentId,
@@ -46,13 +48,9 @@ export class OrdersController {
   }
 
   @Get('execute-payment')
-  executePayment(
-    @Query('paymentId') paymentId: string,
-    @Query('PayerID') payerId: string,
-    @Req() req: Request,
-  ) {
+  executePayment(@Query('token') token: string, @Req() req: Request) {
     const user = req['user'] as UserDto;
-    return this._ordersService.executePayment(user, paymentId, payerId).pipe(
+    return this._ordersService.executePayment(user, token).pipe(
       map(() => ({
         message: 'Payment executed successfully',
       })),
@@ -60,13 +58,9 @@ export class OrdersController {
   }
 
   @Delete('cancel-payment')
-  cancelPayment(
-    @Query('paymentId') paymentId: string,
-    @Query('PayerID') payerId: string,
-    @Req() req: Request,
-  ) {
+  cancelPayment(@Query('token') token: string, @Req() req: Request) {
     const user = req['user'] as UserDto;
-    return this._ordersService.cancelPayment(user, paymentId, payerId).pipe(
+    return this._ordersService.cancelPayment(user, token).pipe(
       map(() => ({
         message: 'Payment cancelled successfully',
       })),

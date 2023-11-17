@@ -53,7 +53,7 @@ export class AuthService {
     return this._usersService.create(registeringUser).pipe(
       concatMap((user) =>
         this._emailConfirmationService
-          .sendVerificationLink(
+          .sendEmailConfirmationLink(
             user.email,
             environment.EMAIL_CONFIRMATION_REDIRECT_URL,
           )
