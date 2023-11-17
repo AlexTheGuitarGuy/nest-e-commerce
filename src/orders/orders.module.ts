@@ -11,6 +11,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Payment, PaymentSchema } from './entities/payment.schema';
 import Joi from '@hapi/joi';
 import { EmailModule } from 'src/email/email.module';
+import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
 
 @Module({
   providers: [OrdersService],
@@ -21,6 +22,7 @@ import { EmailModule } from 'src/email/email.module';
     TypeOrmModule.forFeature([PayerEntity]),
     MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
     EmailModule,
+    EmailConfirmationModule,
   ],
 })
 export class OrdersModule {

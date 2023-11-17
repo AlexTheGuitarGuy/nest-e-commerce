@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
 import { environment } from 'src/environments/environment';
 import { EmailService } from 'src/email/services/email.service';
+import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +22,7 @@ export class OrdersService {
     private readonly _paymentSchema: Model<Payment>,
     private readonly _cartService: CartService,
     private readonly _emailService: EmailService,
+    private readonly _emailConfirmationService: EmailConfirmationService,
   ) {}
 
   public createPayment(user: UserDto) {
@@ -110,32 +112,9 @@ export class OrdersService {
     );
   }
 
-  public paypalEmail(
-    user: UserDto,
-    shouldContinue: boolean,
-    paymentId?: string,
-    payerId?: string,
-  ) {
-    return shouldContinue
-      ? this._emailService.sendEmail({
-          to: user.email,
-          subject: 'Payment confirmation',
-          text: `Please confirm your payment before proceeding.\n
-      If you have already confirmed your payment, please ignore this email.\n
-      Payment ID: ${paymentId}\n
-      Payer ID: ${payerId}\n
-      Click on the link to confirm your payment: ${environment.PAYPAL_CONFIRM_URL}?paymentId=${paymentId}&PayerID=${payerId}\n
-      Click on the link to cancel your payment: ${environment.PAYPAL_CANCEL_URL}?paymentId=${paymentId}&PayerID=${payerId}\n
-      `,
-        })
-      : this._emailService.sendEmail({
-          to: user.email,
-          subject: 'Payment cancelation',
-          text: `Your payment has been cancelled.`,
-        });
-  }
-
-  public executePayment(user: UserDto, paymentId: string, payerId: string) {
+  public executePayment(user: UserDto, token: string) {
+    const { paymentId, payerId } =
+      this._emailConfirmationService.decodePaypalOrderToken(token);
     return from(
       this._paymentSchema.findOne({
         'paymentResponse.id': paymentId,
@@ -215,7 +194,9 @@ export class OrdersService {
     );
   }
 
-  public cancelPayment(user: UserDto, paymentId: string, payerId: string) {
+  public cancelPayment(user: UserDto, token: string) {
+    const { paymentId, payerId } =
+      this._emailConfirmationService.decodePaypalOrderToken(token);
     return from(
       this._paymentSchema.findOne({
         'paymentResponse.id': paymentId,
