@@ -9,6 +9,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Payment } from '../entities/payment.schema';
 import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
+import { environment } from 'src/environments/environment';
+import { EmailService } from 'src/email/services/email.service';
+import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 
 @Injectable()
 export class OrdersService {
@@ -18,9 +21,11 @@ export class OrdersService {
     @InjectModel(Payment.name)
     private readonly _paymentSchema: Model<Payment>,
     private readonly _cartService: CartService,
+    private readonly _emailService: EmailService,
+    private readonly _emailConfirmationService: EmailConfirmationService,
   ) {}
 
-  public createPayment(user: UserDto, returnUrl: string, cancelUrl: string) {
+  public createPayment(user: UserDto) {
     return this._cartService.viewCart(user.id).pipe(
       concatMap((cart) => {
         if (!cart.cartItems.length) throw new BadRequestException('Empty cart');
@@ -39,8 +44,8 @@ export class OrdersService {
             payment_method: 'paypal',
           },
           redirect_urls: {
-            return_url: returnUrl,
-            cancel_url: cancelUrl,
+            return_url: `${environment.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=true`,
+            cancel_url: `${environment.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=false`,
           },
           transactions: [
             {
@@ -107,18 +112,19 @@ export class OrdersService {
     );
   }
 
-  public executePayment(user: UserDto, paymentId: string, payerId: string) {
+  public executePayment(user: UserDto, token: string) {
+    const { paymentId, payerId } =
+      this._emailConfirmationService.decodePaypalOrderToken(token);
     return from(
-      new Promise<paypal.PaymentResponse>((resolve, reject) => {
-        paypal.payment.get(paymentId, (err, payment) => {
-          if (err) reject(err);
-          else resolve(payment);
-        });
+      this._paymentSchema.findOne({
+        'paymentResponse.id': paymentId,
       }),
     ).pipe(
       tap((payment) => {
-        if (payment.state !== 'created')
+        if (payment?.paymentResponse.state === 'approved')
           throw new BadRequestException('Payment already executed');
+        if (payment?.paymentResponse.state === 'cancelled')
+          throw new BadRequestException('Payment already cancelled');
       }),
       concatMap(
         () =>
@@ -146,29 +152,99 @@ export class OrdersService {
             map(() => payment),
           );
         } else if (!payer.payerId) {
-          payer.payerId = payerId;
-          return from(this._payerRepository.save(payer)).pipe(
-            map(() => payment),
-          );
+          return from(
+            this._payerRepository.update(
+              { id: user.payer?.id },
+              { payerId: (payment.payer as any).payer_info.payer_id },
+            ),
+          ).pipe(map(() => payment));
         }
 
         return of(payment);
       }),
       concatMap((payment) => {
-        const updatedPayment = new this._paymentSchema({
-          paymentResponse: payment,
-        });
         return from(
           this._paymentSchema.findOneAndUpdate(
             { 'paymentResponse.id': paymentId },
-            { paymentResponse: updatedPayment.paymentResponse },
-            { new: true },
+            { $set: { paymentResponse: payment } },
           ),
         ).pipe(map(() => payment));
+      }),
+      map((payment) => {
+        return this._emailService
+          .sendEmail({
+            to: user.email,
+            subject: 'Payment successful',
+            text: `
+            Your payment was successful.\n
+            Payment ID: ${paymentId}\n
+            Payer ID: ${payerId}\n
+            Amount: ${payment.transactions[0].amount.total}\n
+            Currency: ${payment.transactions[0].amount.currency}\n
+            Items: ${payment.transactions[0].item_list?.items
+              .map((item) => `${item.name} x ${item.quantity}`)
+              .join(', ')}\n
+            `,
+          })
+          .pipe(map((payment) => payment));
       }),
       concatMap((payment) =>
         this._cartService.deleteFromCart(user.id).pipe(map(() => payment)),
       ),
+    );
+  }
+
+  public cancelPayment(user: UserDto, token: string) {
+    const { paymentId, payerId } =
+      this._emailConfirmationService.decodePaypalOrderToken(token);
+    return from(
+      this._paymentSchema.findOne({
+        'paymentResponse.id': paymentId,
+      }),
+    ).pipe(
+      concatMap((payment) => {
+        if (!payment) throw new BadRequestException('Payment not found');
+        if (payment.paymentResponse.state === 'approved')
+          throw new BadRequestException('Payment already executed');
+        if (payment.paymentResponse.state === 'cancelled')
+          throw new BadRequestException('Payment already cancelled');
+
+        return from(
+          this._paymentSchema.updateOne(
+            { 'paymentResponse.id': paymentId },
+            { $set: { 'paymentResponse.state': 'cancelled' } },
+          ),
+        ).pipe(
+          map(() => {
+            const plainPayment = payment.toObject();
+            return {
+              ...plainPayment,
+              paymentResponse: {
+                ...plainPayment.paymentResponse,
+                state: 'cancelled',
+              },
+            };
+          }),
+        );
+      }),
+      map((payment) => {
+        return this._emailService.sendEmail({
+          to: user.email,
+          subject: 'Payment cancelled',
+          text: `
+            Your payment was cancelled.\n
+            Payment ID: ${paymentId}\n
+            Payer ID: ${payerId}\n
+            Amount: ${payment.paymentResponse.transactions[0].amount.total}\n
+            Currency: ${
+              payment.paymentResponse.transactions[0].amount.currency
+            }\n
+            Items: ${payment.paymentResponse.transactions[0].item_list?.items
+              .map((item) => `${item.name} x ${item.quantity}`)
+              .join(', ')}\n
+            `,
+        });
+      }),
     );
   }
 

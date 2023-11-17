@@ -133,16 +133,6 @@ export class UsersService {
         return foundUser;
       }),
       concatMap((foundUser) => {
-        if (!updateUserDto.password) return of(foundUser);
-
-        return from(bcrypt.hash(updateUserDto.password, 10)).pipe(
-          map((hashedPassword) => {
-            updateUserDto.password = hashedPassword;
-            return foundUser;
-          }),
-        );
-      }),
-      concatMap((foundUser) => {
         const updated = this._usersRepository.merge(foundUser, updateUserDto);
         return from(this._usersRepository.save(updated));
       }),
@@ -151,6 +141,34 @@ export class UsersService {
           throw new BadRequestException('This user already exists');
         }
         throw new BadRequestException(error.detail);
+      }),
+    );
+  }
+
+  updatePassword(id: number, newPassword: string) {
+    return this.findOneById(id).pipe(
+      concatMap((foundUser) => {
+        const updated = this._usersRepository.merge(foundUser, {
+          password: newPassword,
+        });
+        return from(this._usersRepository.save(updated));
+      }),
+    );
+  }
+
+  markEmailAsConfirmed(email: string): Observable<UserEntity> {
+    return from(this._usersRepository.findOne({ where: { email } })).pipe(
+      map((foundUser) => {
+        if (!foundUser) {
+          throw new NotFoundException(`User with email ${email} not found`);
+        } else if (foundUser.isEmailConfirmed) {
+          throw new BadRequestException('Email already confirmed');
+        }
+        return foundUser;
+      }),
+      concatMap((foundUser) => {
+        foundUser.isEmailConfirmed = true;
+        return from(this._usersRepository.save(foundUser));
       }),
     );
   }

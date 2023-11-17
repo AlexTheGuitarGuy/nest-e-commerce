@@ -2,15 +2,24 @@ import { Module } from '@nestjs/common';
 import { MinioClientService } from './services/minio-client.service';
 import { MinioModule } from 'nestjs-minio-client';
 import { environment } from 'src/environments/environment';
+import Joi from '@hapi/joi';
 
 @Module({
   imports: [
     MinioModule.register({
-      endPoint: environment.MINIO_ENDPOINT || 'localhost',
-      port: environment.MINIO_PORT || 9000,
+      ...Joi.object({
+        endPoint: Joi.string().required(),
+        port: Joi.number().required(),
+        accessKey: Joi.string().required(),
+        secretKey: Joi.string().required(),
+      }).validate({
+        endPoint: environment.MINIO_ENDPOINT,
+        port: environment.MINIO_PORT,
+        accessKey: environment.MINIO_ACCESS_KEY,
+        secretKey: environment.MINIO_SECRET_KEY,
+      }).value,
+
       useSSL: false,
-      accessKey: environment.MINIO_ACCESS_KEY || 'minioadmin',
-      secretKey: environment.MINIO_SECRET_KEY || 'minioadmin',
     }),
   ],
   providers: [MinioClientService],

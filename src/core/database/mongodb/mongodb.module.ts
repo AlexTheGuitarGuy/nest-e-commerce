@@ -3,6 +3,7 @@ import { MongooseModule, MongooseModuleFactoryOptions } from '@nestjs/mongoose';
 
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { environment } from 'src/environments/environment';
+import Joi from '@hapi/joi';
 
 @Module({
   imports: [
@@ -10,9 +11,11 @@ import { environment } from 'src/environments/environment';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: () => {
-        const mongooseOptions: MongooseModuleFactoryOptions = {
+        const mongooseOptions: MongooseModuleFactoryOptions = Joi.object({
+          uri: Joi.string().required(),
+        }).validate({
           uri: environment.MONGODB_URI,
-        };
+        }).value;
 
         return mongooseOptions;
       },

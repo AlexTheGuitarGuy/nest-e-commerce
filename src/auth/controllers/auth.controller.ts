@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Req,
   Res,
@@ -10,11 +11,12 @@ import {
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserDto } from 'src/users/dto/user.dto';
-import dayjs from 'dayjs';
+import { map, tap } from 'rxjs';
+import { EmailConfirmationBypassed } from 'src/email-confirmation/decorators/email-confirmation-bypassed.decorator';
+import { RegisterDto } from '../dto/register.dto';
+import { UpdatePasswordDto } from '../dto/update-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -24,19 +26,13 @@ export class AuthController {
   @Public()
   @Post('login')
   login(@Req() req: Request, @Res() res: Response) {
-    const { access_token } = this._authService.login(req.user as UserDto);
+    this._authService.login(req.user as UserDto, res);
 
-    res
-      .cookie('access_token', access_token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        expires: dayjs().add(1, 'day').toDate(),
-      })
-      .send({ message: 'Login successful' });
+    res.send({ message: 'Login successful' });
   }
 
   @Post('logout')
+  @EmailConfirmationBypassed()
   logout(@Res() res: Response) {
     res.clearCookie('access_token').send({
       message: 'Logout successful',
@@ -44,12 +40,34 @@ export class AuthController {
   }
 
   @Post('register')
-  register(@Body() user: CreateUserDto) {
-    return this._authService.register(user);
+  @Public()
+  register(@Body() createUser: RegisterDto, @Res() res: Response) {
+    return this._authService.register(createUser).pipe(
+      tap((user) => {
+        this._authService.login(user, res);
+        res.send({ message: 'Registration successful' });
+      }),
+    );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Patch('password')
+  updatePassword(
+    @Body() updatePasswordDto: UpdatePasswordDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as UserDto;
+    return this._authService
+      .sendResetPasswordEmail(user, updatePasswordDto)
+      .pipe(
+        map(() => ({
+          message:
+            'An email has been sent to your email address, please check it to reset your password.',
+        })),
+      );
+  }
+
   @Get('profile')
+  @EmailConfirmationBypassed()
   getProfile(@Req() req: Request) {
     return req.user;
   }

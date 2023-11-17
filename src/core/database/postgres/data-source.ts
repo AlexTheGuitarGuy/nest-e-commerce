@@ -1,15 +1,24 @@
 import { environment } from 'src/environments/environment';
 import { DataSource, DataSourceOptions } from 'typeorm';
+import Joi from '@hapi/joi';
 
 export const datasourceOptions: DataSourceOptions = {
   type: 'postgres',
-  host: environment.PG_HOST || 'localhost',
-  port: +(environment.PG_PORT || 5432),
-  username: environment.PG_USERNAME || 'postgres',
-  password: environment.PG_PASSWORD || 'postgres',
+  ...Joi.object({
+    host: Joi.string().required(),
+    port: Joi.number().required(),
+    username: Joi.string().required(),
+    password: Joi.string().required(),
+    database: Joi.string().required(),
+  }).validate({
+    host: environment.PG_HOST,
+    port: environment.PG_PORT,
+    username: environment.PG_USERNAME,
+    password: environment.PG_PASSWORD,
+    database: environment.PG_DATABASE,
+  }).value,
   entities: ['dist/**/*.entity.js'],
   migrations: ['dist/migrations/*.js'],
-  database: environment.PG_DATABASE || 'postgres',
   synchronize: true,
   logging: true,
   migrationsTableName: 'migrations',

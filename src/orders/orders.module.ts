@@ -9,6 +9,9 @@ import { UsersModule } from 'src/users/users.module';
 import { OrdersController } from './controllers/orders.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Payment, PaymentSchema } from './entities/payment.schema';
+import Joi from '@hapi/joi';
+import { EmailModule } from 'src/email/email.module';
+import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
 
 @Module({
   providers: [OrdersService],
@@ -18,16 +21,22 @@ import { Payment, PaymentSchema } from './entities/payment.schema';
     UsersModule,
     TypeOrmModule.forFeature([PayerEntity]),
     MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
+    EmailModule,
+    EmailConfirmationModule,
   ],
 })
 export class OrdersModule {
   constructor() {
-    const paypalConfig = {
+    const paypalConfig = Joi.object({
+      mode: Joi.string().required(),
+      client_id: Joi.string().required(),
+      client_secret: Joi.string().required(),
+    }).validate({
       mode: environment.PAYPAL_MODE,
       client_id: environment.PAYPAL_CLIENT_ID,
-
       client_secret: environment.PAYPAL_CLIENT_SECRET,
-    };
+    }).value;
+
     paypal.configure(paypalConfig);
   }
 }
