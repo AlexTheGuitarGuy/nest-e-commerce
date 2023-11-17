@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Observable, map } from 'rxjs';
+import { Observable, map, concatMap, from } from 'rxjs';
 import { UserDto } from 'src/users/dto/user.dto';
 import { UsersService } from 'src/users/services/users.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -10,12 +10,16 @@ import dayjs from 'dayjs';
 import { environment } from 'src/environments/environment';
 import { RegisterDto } from '../dto/register.dto';
 import { Role } from 'src/common/enums/role.enum';
+import { UpdatePasswordDto } from '../dto/update-password.dto';
+import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly _usersService: UsersService,
     private readonly _jwtService: JwtService,
+    private readonly _emailConfirmationService: EmailConfirmationService,
   ) {}
 
   validateUser(username: string, password: string): Observable<UserDto | null> {
@@ -46,8 +50,42 @@ export class AuthService {
       role: Role.Customer,
     });
 
+    return this._usersService.create(registeringUser).pipe(
+      concatMap((user) =>
+        this._emailConfirmationService
+          .sendVerificationLink(
+            user.email,
+            environment.EMAIL_CONFIRMATION_REDIRECT_URL,
+          )
+          .pipe(map(() => user)),
+      ),
+      map((user) => plainToInstance(UserDto, user)),
+    );
+  }
+
+  sendResetPasswordEmail(user: UserDto, updatePasswordDto: UpdatePasswordDto) {
     return this._usersService
-      .create(registeringUser)
-      .pipe(map((user) => plainToInstance(UserDto, user)));
+      .validate(user.username, updatePasswordDto.oldPassword)
+      .pipe(
+        map((user) => {
+          if (!user) throw new BadRequestException('Invalid credentials');
+          return user;
+        }),
+        concatMap((user) => {
+          return from(bcrypt.hash(updatePasswordDto.newPassword, 10)).pipe(
+            map((hashedPassword) => ({
+              user,
+              hashedPassword,
+            })),
+          );
+        }),
+        concatMap(({ user, hashedPassword }) =>
+          this._emailConfirmationService.sendPasswordResetLink(
+            user.email,
+            hashedPassword,
+            environment.PASSWORD_RESET_REDIRECT_URL,
+          ),
+        ),
+      );
   }
 }
