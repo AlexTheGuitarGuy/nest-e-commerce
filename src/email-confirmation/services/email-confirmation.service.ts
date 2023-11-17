@@ -83,4 +83,16 @@ export class EmailConfirmationService {
       throw new BadRequestException('Bad email confirmation token');
     }
   }
+
+  sendPasswordResetLink(
+    email: string,
+    newPassword: string,
+    redirectUrl: string,
+  ) {
+    return this._emailService.sendEmail({
+      to: email,
+      subject: 'Password reset',
+      text: `To reset your password, click on the link: ${redirectUrl}?hashedPassword=${newPassword}`,
+    });
+  }
 }
