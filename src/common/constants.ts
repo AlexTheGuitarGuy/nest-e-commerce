@@ -33,4 +33,3 @@ export const INTERNAL_PARAMETERS = [
   'updated_by',
 ];
 
-export const PORT_NUMBER = 3001;
