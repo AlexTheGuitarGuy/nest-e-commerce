@@ -23,9 +23,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   private static extractJWTFromCookie(req: Request): string | null {
-    if (!req.cookies?.access_token) return null;
+    if (!req.cookies?.['access_token']) return null;
 
-    return req.cookies.access_token;
+    return req.cookies['access_token'];
   }
 
   validate(payload: UserDto) {

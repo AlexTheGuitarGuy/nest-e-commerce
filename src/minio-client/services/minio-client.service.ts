@@ -1,5 +1,5 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
-import { MinioService } from 'nestjs-minio-client';
+import { MinioService, MinioClient } from 'nestjs-minio-client';
 import { BufferedFile } from '../models/file.model';
 import * as crypto from 'crypto';
 import { Observable, of } from 'rxjs';
@@ -10,7 +10,7 @@ export class MinioClientService {
   private readonly logger: Logger;
   private readonly baseBucket = environment.MINIO_BUCKET_NAME;
 
-  public get client() {
+  public get client(): MinioClient {
     return this.minio.client;
   }
 
@@ -46,8 +46,9 @@ export class MinioClientService {
       baseBucket,
       fileName,
       fileBuffer,
+      file.size,
       metaData,
-      function (err: Error, _: any) {
+      function (err) {
         if (err)
           throw new HttpException(
             'Error uploading file',
@@ -70,7 +71,7 @@ export class MinioClientService {
     this.client.removeObject(
       baseBucket,
       objetName,
-      function (err: Error, _: any) {
+      function (err) {
         if (err)
           throw new HttpException(
             'Oops Something wrong happend',
