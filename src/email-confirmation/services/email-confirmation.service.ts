@@ -7,7 +7,6 @@ import { EmailService } from 'src/email/services/email.service';
 import { VerificationTokenPayload } from '../interfaces/verification-token-payload';
 import { UserDto } from 'src/users/dto/user.dto';
 import { UsersService } from 'src/users/services/users.service';
-import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class EmailConfirmationService {
@@ -21,8 +20,8 @@ export class EmailConfirmationService {
     const payload: VerificationTokenPayload = { email };
 
     const token = this._jwtService.sign(payload, {
-      secret: environment.JWT_VERIFICATION_TOKEN_SECRET,
-      expiresIn: `${environment.JWT_VERIFICATION_TOKEN_EXPIRATION_TIME}s`,
+      secret: process.env.JWT_VERIFICATION_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_VERIFICATION_TOKEN_EXPIRATION_TIME}s`,
     });
 
     const url = `${redirectUrl}?token=${token}`;
@@ -43,14 +42,14 @@ export class EmailConfirmationService {
 
     return this.sendEmailConfirmationLink(
       user.email,
-      environment.EMAIL_CONFIRMATION_REDIRECT_URL || '',
+      process.env.EMAIL_CONFIRMATION_REDIRECT_URL || '',
     );
   }
 
   decodeEmailConfirmationToken(token: string) {
     try {
       const payload = this._jwtService.verify(token, {
-        secret: environment.JWT_VERIFICATION_TOKEN_SECRET,
+        secret: process.env.JWT_VERIFICATION_TOKEN_SECRET,
       });
 
       if ('email' in payload) {
@@ -77,8 +76,8 @@ export class EmailConfirmationService {
     const payload = { hashedPassword: newPassword };
 
     const token = this._jwtService.sign(payload, {
-      secret: environment.JWT_PASSWORD_RESET_TOKEN_SECRET,
-      expiresIn: `${environment.JWT_PASSWORD_RESET_TOKEN_EXPIRATION_TIME}s`,
+      secret: process.env.JWT_PASSWORD_RESET_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_PASSWORD_RESET_TOKEN_EXPIRATION_TIME}s`,
     });
 
     const text = `To reset your password, click on the link: ${redirectUrl}?token=${token}`;
@@ -93,7 +92,7 @@ export class EmailConfirmationService {
   decodePasswordResetToken(token: string) {
     try {
       const payload = this._jwtService.verify(token, {
-        secret: environment.JWT_PASSWORD_RESET_TOKEN_SECRET,
+        secret: process.env.JWT_PASSWORD_RESET_TOKEN_SECRET,
       });
 
       if ('hashedPassword' in payload) {
@@ -125,12 +124,12 @@ export class EmailConfirmationService {
     const payload = { paymentId, payerId };
 
     const token = this._jwtService.sign(payload, {
-      secret: environment.JWT_PAYPAL_ORDER_TOKEN_SECRET,
-      expiresIn: `${environment.JWT_PAYPAL_ORDER_TOKEN_EXPIRATION_TIME}s`,
+      secret: process.env.JWT_PAYPAL_ORDER_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_PAYPAL_ORDER_TOKEN_EXPIRATION_TIME}s`,
     });
 
-    const confirmUrl = `${environment.PAYPAL_CONFIRM_URL}?token=${token}`;
-    const cancelUrl = `${environment.PAYPAL_CANCEL_URL}?token=${token}`;
+    const confirmUrl = `${process.env.PAYPAL_CONFIRM_URL}?token=${token}`;
+    const cancelUrl = `${process.env.PAYPAL_CANCEL_URL}?token=${token}`;
 
     const text = `Please confirm your payment before proceeding.\n
       If you have already confirmed your payment, please ignore this email.\n
@@ -150,7 +149,7 @@ export class EmailConfirmationService {
   decodePaypalOrderToken(token: string) {
     try {
       const payload = this._jwtService.verify(token, {
-        secret: environment.JWT_PAYPAL_ORDER_TOKEN_SECRET,
+        secret: process.env.JWT_PAYPAL_ORDER_TOKEN_SECRET,
       });
 
       if ('paymentId' in payload && 'payerId' in payload) {
@@ -175,7 +174,7 @@ export class EmailConfirmationService {
       secure: false,
       sameSite: 'lax',
       expires: dayjs()
-        .add(environment.JWT_SESSION_DURATION, 'seconds')
+        .add(process.env.JWT_SESSION_DURATION, 'seconds')
         .toDate(),
     });
   }

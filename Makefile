@@ -1,5 +1,5 @@
 # create start script
-start-local-dev:
+start-dev:
 	pnpm start:dev 
 
 start-local-dev-minio:

@@ -9,7 +9,6 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
-import { environment } from 'src/environments/environment';
 import Joi from '@hapi/joi';
 import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
 
@@ -21,7 +20,7 @@ import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmati
       ...Joi.object({
         secret: Joi.string().required(),
       }).validate({
-        secret: environment.JWT_SECRET,
+        secret: process.env.JWT_SECRET,
       }).value,
       signOptions: { expiresIn: '1d' },
     }),

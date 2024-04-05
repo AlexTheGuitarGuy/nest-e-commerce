@@ -3,7 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserDto } from 'src/users/dto/user.dto';
 import { Request } from 'express';
-import { environment } from 'src/environments/environment';
 import Joi from '@hapi/joi';
 
 @Injectable()
@@ -17,7 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ...Joi.object({
         secretOrKey: Joi.string().required(),
       }).validate({
-        secretOrKey: environment.JWT_SECRET,
+        secretOrKey: process.env.JWT_SECRET,
       }).value,
     });
   }

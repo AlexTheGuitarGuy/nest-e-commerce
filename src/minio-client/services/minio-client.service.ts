@@ -3,12 +3,11 @@ import { MinioService, MinioClient } from 'nestjs-minio-client';
 import { BufferedFile } from '../models/file.model';
 import * as crypto from 'crypto';
 import { Observable, of } from 'rxjs';
-import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class MinioClientService {
   private readonly logger: Logger;
-  private readonly baseBucket = environment.MINIO_BUCKET_NAME;
+  private readonly baseBucket = process.env.MINIO_BUCKET_NAME;
 
   public get client(): MinioClient {
     return this.minio.client;
@@ -58,7 +57,7 @@ export class MinioClientService {
     );
 
     return of({
-      url: `${environment.MINIO_ENDPOINT}:${environment.MINIO_PORT}/${environment.MINIO_BUCKET_NAME}/${filename}`,
+      url: `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${process.env.MINIO_BUCKET_NAME}/${filename}`,
       filename,
     });
   }

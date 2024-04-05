@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
 import Redis from 'ioredis';
 import { Observable, from } from 'rxjs';
-import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class RedisClientService {
@@ -14,8 +13,8 @@ export class RedisClientService {
         host: Joi.string().required(),
         port: Joi.number().required(),
       }).validate({
-        host: environment.REDIS_HOST,
-        port: environment.REDIS_PORT,
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
       }).value,
     );
   }

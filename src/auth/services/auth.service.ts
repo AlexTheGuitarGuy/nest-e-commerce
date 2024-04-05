@@ -7,7 +7,6 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { Response } from 'express';
 import dayjs from 'dayjs';
-import { environment } from 'src/environments/environment';
 import { RegisterDto } from '../dto/register.dto';
 import { Role } from 'src/common/enums/role.enum';
 import { UpdatePasswordDto } from '../dto/update-password.dto';
@@ -37,7 +36,7 @@ export class AuthService {
       secure: false,
       sameSite: 'lax',
       expires: dayjs()
-        .add(environment.JWT_SESSION_DURATION, 'seconds')
+        .add(process.env.JWT_SESSION_DURATION, 'seconds')
         .toDate(),
     });
 
@@ -55,7 +54,7 @@ export class AuthService {
         this._emailConfirmationService
           .sendEmailConfirmationLink(
             user.email,
-            environment.EMAIL_CONFIRMATION_REDIRECT_URL,
+            process.env.EMAIL_CONFIRMATION_REDIRECT_URL,
           )
           .pipe(map(() => user)),
       ),
@@ -83,7 +82,7 @@ export class AuthService {
           this._emailConfirmationService.sendPasswordResetLink(
             user.email,
             hashedPassword,
-            environment.PASSWORD_RESET_REDIRECT_URL,
+            process.env.PASSWORD_RESET_REDIRECT_URL,
           ),
         ),
       );

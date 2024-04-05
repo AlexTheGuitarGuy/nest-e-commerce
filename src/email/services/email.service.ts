@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { createTransport } from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 import { from } from 'rxjs';
-import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class EmailService {
@@ -10,12 +9,12 @@ export class EmailService {
 
   constructor() {
     this.nodemailerTransport = createTransport({
-      host: environment.EMAIL_SERVICE,
+      host: process.env.EMAIL_SERVICE,
       port: 465,
       secure: true,
       auth: {
-        user: environment.EMAIL_USER,
-        pass: environment.EMAIL_PASS,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
   }

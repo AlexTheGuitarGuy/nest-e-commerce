@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import { CartModule } from 'src/cart/cart.module';
 import * as paypal from 'paypal-rest-sdk';
-import { environment } from 'src/environments/environment';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PayerEntity } from './entities/payer.entity';
 import { UsersModule } from 'src/users/users.module';
@@ -32,9 +31,9 @@ export class OrdersModule {
       client_id: Joi.string().required(),
       client_secret: Joi.string().required(),
     }).validate({
-      mode: environment.PAYPAL_MODE,
-      client_id: environment.PAYPAL_CLIENT_ID,
-      client_secret: environment.PAYPAL_CLIENT_SECRET,
+      mode: process.env.PAYPAL_MODE,
+      client_id: process.env.PAYPAL_CLIENT_ID,
+      client_secret: process.env.PAYPAL_CLIENT_SECRET,
     }).value;
 
     paypal.configure(paypalConfig);

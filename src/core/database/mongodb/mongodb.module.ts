@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule, MongooseModuleFactoryOptions } from '@nestjs/mongoose';
 
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { environment } from 'src/environments/environment';
 import Joi from '@hapi/joi';
 
 @Module({
@@ -14,7 +13,7 @@ import Joi from '@hapi/joi';
         const mongooseOptions: MongooseModuleFactoryOptions = Joi.object({
           uri: Joi.string().required(),
         }).validate({
-          uri: environment.MONGODB_URI,
+          uri: process.env.MONGODB_URI,
         }).value;
 
         return mongooseOptions;

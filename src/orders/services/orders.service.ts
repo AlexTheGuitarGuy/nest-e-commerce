@@ -9,7 +9,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Payment } from '../entities/payment.schema';
 import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
-import { environment } from 'src/environments/environment';
 import { EmailService } from 'src/email/services/email.service';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 
@@ -44,8 +43,8 @@ export class OrdersService {
             payment_method: 'paypal',
           },
           redirect_urls: {
-            return_url: `${environment.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=true`,
-            cancel_url: `${environment.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=false`,
+            return_url: `${process.env.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=true`,
+            cancel_url: `${process.env.PAYPAL_PAYMENT_REDIRECT_URL}?shouldContinue=false`,
           },
           transactions: [
             {
