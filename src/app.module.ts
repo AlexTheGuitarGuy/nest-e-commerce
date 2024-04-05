@@ -3,7 +3,6 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { CartModule } from './cart/cart.module';
-import { RedisClientModule } from './redis-client/redis-client.module';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './core/database/database.module';
 import { postgresConfig } from './core/database/postgres/postgres.config';
@@ -24,7 +23,6 @@ import { EmailConfirmationModule } from './email-confirmation/email-confirmation
     UsersModule,
     ProductsModule,
     CartModule,
-    RedisClientModule,
     OrdersModule,
     EmailModule,
     ScheduleModule.forRoot(),

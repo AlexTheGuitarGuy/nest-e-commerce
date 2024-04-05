@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { RedisClientService } from 'src/redis-client/services/redis-client.service';
+import { RedisClientService } from 'src/core/database/redis-client/services/redis-client.service';
 import { UsersService } from 'src/users/services/users.service';
 import { CartDto } from '../dto/cart.dto';
 import { ProductsService } from 'src/products/services/products.service';

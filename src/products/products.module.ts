@@ -4,7 +4,7 @@ import { ProductEntity } from './entities/product.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { ImageEntity } from './entities/image.entity';
-import { MinioClientModule } from 'src/minio-client/minio-client.module';
+import { MinioClientModule } from 'src/core/database/minio-client/minio-client.module';
 import { ProductsService } from './services/products.service';
 
 @Module({

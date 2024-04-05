@@ -1,6 +1,9 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Request } from 'express';
-import { AppMimeType, BufferedFile } from 'src/minio-client/models/file.model';
+import {
+  AppMimeType,
+  BufferedFile,
+} from 'src/core/database/minio-client/models/file.model';
 
 export const ImageFileFilter = (
   _req: Request,
