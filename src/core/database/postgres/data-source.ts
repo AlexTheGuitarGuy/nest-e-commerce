@@ -1,6 +1,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import Joi from '@hapi/joi';
 
+console.log('postgres data', process.env.POSTGRES_PASSWORD);
 export const datasourceOptions: DataSourceOptions = {
   type: 'postgres',
   ...Joi.object({
@@ -10,11 +11,11 @@ export const datasourceOptions: DataSourceOptions = {
     password: Joi.string().required(),
     database: Joi.string().required(),
   }).validate({
-    host: process.env.PG_HOST,
-    port: process.env.PG_PORT,
-    username: process.env.PG_USERNAME,
-    password: process.env.PG_PASSWORD,
-    database: process.env.PG_DATABASE,
+    host: process.env.POSTGRES_HOST,
+    port: process.env.POSTGRES_PORT,
+    username: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
   }).value,
   entities: ['dist/**/*.entity.js'],
   migrations: ['dist/migrations/*.js'],

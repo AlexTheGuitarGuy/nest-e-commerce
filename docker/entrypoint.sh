@@ -1,0 +1,19 @@
+#!/bin/bash
+
+export PGPASSWORD="${POSTGRES_PASSWORD}"
+
+psql --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" << EOF
+CREATE SCHEMA IF NOT EXISTS ${POSTGRES_SCHEMA};
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE OR REPLACE FUNCTION ${POSTGRES_SCHEMA}.gen_random_uuid()
+RETURNS UUID
+LANGUAGE plpgsql
+AS \$\$
+BEGIN
+    RETURN uuid_generate_v4();
+END;
+\$\$;
+
+EOF
