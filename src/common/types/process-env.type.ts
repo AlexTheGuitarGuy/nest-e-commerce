@@ -24,6 +24,7 @@ export interface ProcessEnv {
   JWT_VERIFICATION_TOKEN_EXPIRATION_TIME: number;
   JWT_VERIFICATION_TOKEN_SECRET: string;
   MINIO_ACCESS_KEY: string;
+  MINIO_ADMIN_PORT: number;
   MINIO_BUCKET_NAME: string;
   MINIO_ENDPOINT: string;
   MINIO_PORT: number;
