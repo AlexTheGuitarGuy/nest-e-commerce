@@ -12,9 +12,11 @@ export class RedisClientService {
       Joi.object({
         host: Joi.string().required(),
         port: Joi.number().required(),
+        password: Joi.string().required(),
       }).validate({
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD,
       }).value,
     );
   }

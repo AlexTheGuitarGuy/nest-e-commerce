@@ -31,7 +31,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { ImageFileFilter } from 'src/common/filters/image-file.filter';
 import { MAX_FILE_SIZE } from 'src/common/constants';
-import { BufferedFile } from 'src/minio-client/models/file.model';
+import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
 
 @Controller('products')
 export class ProductsController {

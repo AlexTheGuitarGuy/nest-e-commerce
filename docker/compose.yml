@@ -1,0 +1,119 @@
+services:
+  api:
+    container_name: e_commerce_api
+    build:
+      pull: true
+      context: ../.
+      dockerfile: ./docker/local.Dockerfile
+    env_file: ./container.env
+    ports:
+      - ${PORT:-8081}:8081
+    develop:
+      watch:
+        - action: sync
+          path: ../.
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
+        - action: rebuild
+          path: ../package.json
+        - action: rebuild
+          path: ../pnpm-lock.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - backend
+    profiles:
+      - backend
+
+  postgres:
+    container_name: postgres
+    image: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    env_file: ./container.env
+    expose:
+      - 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./entrypoint.sh:/docker-entrypoint-initdb.d/entrypoint.sh
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - infrastructure
+      - backend
+    profiles:
+      - infrastructure
+      - backend
+
+  redis:
+    container_name: redis
+    image: redis
+    restart: unless-stopped
+    command: 'redis-server --requirepass ${REDIS_PASSWORD}'
+    ports:
+      - ${REDIS_PORT:-6379}:6379
+    expose:
+      - ${REDIS_PORT:-6379}
+    env_file: ./container.env
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - infrastructure
+      - backend
+    profiles:
+      - infrastructure
+      - backend
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: unless-stopped
+    command: server /data/minio --console-address ":${MINIO_ADMIN_PORT:-9001}"
+    ports:
+      - ${MINIO_PORT:-9000}:9000
+      - '${MINIO_ADMIN_PORT:-9001}:9001'
+    expose:
+      - ${MINIO_PORT:-9000}
+    env_file: ./container.env
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - infrastructure
+      - backend
+    profiles:
+      - infrastructure
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  backend:
+  infrastructure:

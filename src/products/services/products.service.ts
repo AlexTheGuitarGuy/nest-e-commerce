@@ -29,8 +29,8 @@ import { UserDto } from 'src/users/dto/user.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { ImageDto } from '../dto/image.dto';
-import { BufferedFile } from 'src/minio-client/models/file.model';
-import { MinioClientService } from 'src/minio-client/services/minio-client.service';
+import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
+import { MinioClientService } from 'src/core/database/minio-client/services/minio-client.service';
 import { ImageEntity } from '../entities/image.entity';
 
 @Injectable()
