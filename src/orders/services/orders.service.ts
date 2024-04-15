@@ -1,24 +1,24 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CartService } from 'src/cart/services/cart.service';
 import { concatMap, from, of, map, tap, Observable } from 'rxjs';
 import * as paypal from 'paypal-rest-sdk';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PayerEntity } from '../entities/payer.entity';
-import { InjectModel } from '@nestjs/mongoose';
 import { Payment } from '../entities/payment.schema';
 import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
 import { EmailService } from 'src/email/services/email.service';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
+import { tenantModels } from 'src/common/providers/tenant-models.provider';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(PayerEntity)
     private readonly _payerRepository: Repository<PayerEntity>,
-    @InjectModel(Payment.name)
-    private readonly _paymentSchema: Model<Payment>,
+    @Inject(tenantModels.paymentModel.provide)
+    private readonly _paymentModel: Model<Payment>,
     private readonly _cartService: CartService,
     private readonly _emailService: EmailService,
     private readonly _emailConfirmationService: EmailConfirmationService,
@@ -95,7 +95,7 @@ export class OrdersService {
         return of(payment);
       }),
       concatMap((payment) => {
-        const newPayment = new this._paymentSchema({
+        const newPayment = new this._paymentModel({
           paymentResponse: {
             ...payment,
             payer: {
@@ -115,7 +115,7 @@ export class OrdersService {
     const { paymentId, payerId } =
       this._emailConfirmationService.decodePaypalOrderToken(token);
     return from(
-      this._paymentSchema.findOne({
+      this._paymentModel.findOne({
         'paymentResponse.id': paymentId,
       }),
     ).pipe(
@@ -163,7 +163,7 @@ export class OrdersService {
       }),
       concatMap((payment) => {
         return from(
-          this._paymentSchema.findOneAndUpdate(
+          this._paymentModel.findOneAndUpdate(
             { 'paymentResponse.id': paymentId },
             { $set: { paymentResponse: payment } },
           ),
@@ -197,7 +197,7 @@ export class OrdersService {
     const { paymentId, payerId } =
       this._emailConfirmationService.decodePaypalOrderToken(token);
     return from(
-      this._paymentSchema.findOne({
+      this._paymentModel.findOne({
         'paymentResponse.id': paymentId,
       }),
     ).pipe(
@@ -209,7 +209,7 @@ export class OrdersService {
           throw new BadRequestException('Payment already cancelled');
 
         return from(
-          this._paymentSchema.updateOne(
+          this._paymentModel.updateOne(
             { 'paymentResponse.id': paymentId },
             { $set: { 'paymentResponse.state': 'cancelled' } },
           ),
@@ -253,7 +253,7 @@ export class OrdersService {
     if (!user.payer?.payerId) return of({ count: 0, payments: [] });
 
     return from(
-      this._paymentSchema.find({
+      this._paymentModel.find({
         'paymentResponse.payer.payer_info.payer_id': user.payer?.payerId,
       }),
     ).pipe(

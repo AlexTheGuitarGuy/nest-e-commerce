@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import { CartModule } from 'src/cart/cart.module';
 import * as paypal from 'paypal-rest-sdk';
@@ -11,9 +11,12 @@ import { Payment, PaymentSchema } from './entities/payment.schema';
 import Joi from '@hapi/joi';
 import { EmailModule } from 'src/email/email.module';
 import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
+import { TenantsMiddleware } from 'src/common/middlewares/tenants.middleware';
+import { tenantModels } from 'src/common/providers/tenant-models.provider';
+import { TenantsModule } from 'src/tenants/tenants.module';
 
 @Module({
-  providers: [OrdersService],
+  providers: [OrdersService, tenantModels.paymentModel],
   controllers: [OrdersController],
   imports: [
     CartModule,
@@ -22,9 +25,10 @@ import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmati
     MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
     EmailModule,
     EmailConfirmationModule,
+    TenantsModule,
   ],
 })
-export class OrdersModule {
+export class OrdersModule implements NestModule {
   constructor() {
     const paypalConfig = Joi.object({
       mode: Joi.string().required(),
@@ -37,5 +41,9 @@ export class OrdersModule {
     }).value;
 
     paypal.configure(paypalConfig);
+  }
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TenantsMiddleware).forRoutes(OrdersController);
   }
 }
