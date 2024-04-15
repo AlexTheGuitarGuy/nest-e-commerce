@@ -1,4 +1,4 @@
-PROFILE ?=backend
+PROFILE ?=infrastructure
 
 serve:
 	make -j2 watch up
