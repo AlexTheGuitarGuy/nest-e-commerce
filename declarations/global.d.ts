@@ -7,13 +7,7 @@ export declare global {
 
   namespace Express {
     interface Request {
-      tenantId?: string;
+      userId?: string;
     }
-  }
-}
-
-export declare module 'http' {
-  interface IncomingHttpHeaders {
-    'x-tenant-id'?: string;
   }
 }

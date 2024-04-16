@@ -9,12 +9,16 @@ import { Payment, PaymentSchema } from './entities/payment.schema';
 import Joi from '@hapi/joi';
 import { EmailModule } from 'src/email/email.module';
 import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
-import { TenantsMiddleware } from 'src/common/middlewares/tenants.middleware';
 import { tenantModels } from 'src/common/providers/tenant-models.provider';
-import { TenantsModule } from 'src/tenants/tenants.module';
+import { tenantConnectionProvider } from 'src/common/providers/tenant-connection.provider';
+import { TenantsMiddleware } from 'src/common/middlewares/tenants.middleware';
 
 @Module({
-  providers: [OrdersService, tenantModels.paymentModel],
+  providers: [
+    OrdersService,
+    tenantConnectionProvider,
+    tenantModels.paymentModel,
+  ],
   controllers: [OrdersController],
   imports: [
     CartModule,
@@ -22,7 +26,6 @@ import { TenantsModule } from 'src/tenants/tenants.module';
     MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
     EmailModule,
     EmailConfirmationModule,
-    TenantsModule,
   ],
 })
 export class OrdersModule implements NestModule {

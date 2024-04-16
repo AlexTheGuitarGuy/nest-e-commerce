@@ -4,21 +4,24 @@ import {
   NestMiddleware,
 } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { TenantsService } from 'src/tenants/tenants.service';
+import { firstValueFrom } from 'rxjs';
+import { UsersService } from 'src/users/services/users.service';
 
 @Injectable()
 export class TenantsMiddleware implements NestMiddleware {
-  constructor(private tenantsService: TenantsService) {}
+  constructor(private readonly _usersService: UsersService) {}
 
   async use(req: Request, _: Response, next: NextFunction) {
-    const tenantId = req.headers['x-tenant-id']?.toString();
+    const userId = req.cookies['user_id']?.toString();
 
-    if (!tenantId) throw new BadRequestException('Tenant id is required');
+    if (!userId) throw new BadRequestException('Tenant id is required');
 
-    const tenantExists = await this.tenantsService.getTenantById(tenantId);
+    const tenantExists = await firstValueFrom(
+      this._usersService.findOneById(userId),
+    );
     if (!tenantExists) throw new BadRequestException('Tenant not found');
 
-    req.tenantId = tenantId;
+    req.userId = userId;
     next();
   }
 }

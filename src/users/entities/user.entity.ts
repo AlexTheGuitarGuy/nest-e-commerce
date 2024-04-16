@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import { Role } from 'src/common/enums/role.enum';
 import { ProductEntity } from 'src/products/entities/product.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
@@ -18,7 +17,6 @@ export class UserEntity {
   username!: string;
 
   @Column({ nullable: false })
-  @Exclude()
   password!: string;
 
   @Column()
@@ -27,7 +25,7 @@ export class UserEntity {
   @OneToMany(() => ProductEntity, (product) => product.seller)
   products!: ProductEntity[];
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   payerId?: string;
 
   @Column()

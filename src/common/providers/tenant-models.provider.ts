@@ -1,4 +1,4 @@
-import { Connection } from 'mongoose';
+import { Connection} from 'mongoose';
 import { Payment, PaymentSchema } from 'src/orders/entities/payment.schema';
 
 export const tenantModels = {

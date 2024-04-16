@@ -15,7 +15,7 @@ import Joi from '@hapi/joi';
           dbName: Joi.string().required(),
         }).validate({
           uri: process.env.MONGODB_URI,
-          dbName: 'nest-e-commerce',
+          dbName: 'main',
         }).value;
 
         return mongooseOptions;

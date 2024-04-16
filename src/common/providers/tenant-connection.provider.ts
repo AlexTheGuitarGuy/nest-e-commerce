@@ -7,11 +7,11 @@ import { Request } from 'express';
 export const tenantConnectionProvider = {
   provide: 'TENANT_CONNECTION',
   useFactory: async (request: Request, connection: Connection) => {
-    if (!request.tenantId)
+    if (!request.userId)
       throw new InternalServerErrorException(
         'Make sure to apply tenant middleware',
       );
-    return connection.useDb(request.tenantId);
+    return connection.useDb(`t_${request.userId}`);
   },
   inject: [REQUEST, getConnectionToken()],
 };
