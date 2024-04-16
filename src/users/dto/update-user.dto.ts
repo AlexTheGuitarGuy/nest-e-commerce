@@ -1,6 +1,5 @@
 import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
-import { PayerDto } from 'src/orders/dto/payer.dto';
 
 export class UpdateUserDto {
   @IsEmail()
@@ -16,7 +15,7 @@ export class UpdateUserDto {
   role?: Role;
 
   @IsOptional()
-  payer?: PayerDto;
+  payerId?: string;
 
   @IsOptional()
   @IsString()

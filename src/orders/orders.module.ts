@@ -2,8 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import { CartModule } from 'src/cart/cart.module';
 import * as paypal from 'paypal-rest-sdk';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { PayerEntity } from './entities/payer.entity';
 import { UsersModule } from 'src/users/users.module';
 import { OrdersController } from './controllers/orders.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -21,7 +19,6 @@ import { TenantsModule } from 'src/tenants/tenants.module';
   imports: [
     CartModule,
     UsersModule,
-    TypeOrmModule.forFeature([PayerEntity]),
     MongooseModule.forFeature([{ name: Payment.name, schema: PaymentSchema }]),
     EmailModule,
     EmailConfirmationModule,

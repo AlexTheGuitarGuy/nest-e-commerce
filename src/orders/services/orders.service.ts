@@ -2,24 +2,21 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CartService } from 'src/cart/services/cart.service';
 import { concatMap, from, of, map, tap, Observable } from 'rxjs';
 import * as paypal from 'paypal-rest-sdk';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { PayerEntity } from '../entities/payer.entity';
 import { Payment } from '../entities/payment.schema';
 import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
 import { EmailService } from 'src/email/services/email.service';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 import { tenantModels } from 'src/common/providers/tenant-models.provider';
+import { UsersService } from 'src/users/services/users.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
-    @InjectRepository(PayerEntity)
-    private readonly _payerRepository: Repository<PayerEntity>,
     @Inject(tenantModels.paymentModel.provide)
     private readonly _paymentModel: Model<Payment>,
     private readonly _cartService: CartService,
+    private readonly _usersService: UsersService,
     private readonly _emailService: EmailService,
     private readonly _emailConfirmationService: EmailConfirmationService,
   ) {}
@@ -78,29 +75,13 @@ export class OrdersService {
           }),
         ),
       ),
-      concatMap((payment) =>
-        from(
-          this._payerRepository.findOne({
-            where: { user },
-          }),
-        ).pipe(map((payer) => ({ payer, payment }))),
-      ),
-      concatMap(({ payer, payment }) => {
-        if (!payer) {
-          return from(this._payerRepository.save({ user })).pipe(
-            map(() => payment),
-          );
-        }
-
-        return of(payment);
-      }),
       concatMap((payment) => {
         const newPayment = new this._paymentModel({
           paymentResponse: {
             ...payment,
             payer: {
               ...payment.payer,
-              payer_info: { payer_id: user.payer?.payerId },
+              payer_info: { payer_id: user.id },
             },
           },
         });
@@ -138,24 +119,12 @@ export class OrdersService {
             );
           }),
       ),
-      concatMap((payment) =>
-        from(
-          this._payerRepository.findOne({
-            where: { user },
-          }),
-        ).pipe(map((payer) => ({ payer, payment }))),
-      ),
-      concatMap(({ payer, payment }) => {
-        if (!payer) {
-          return from(this._payerRepository.save({ user })).pipe(
-            map(() => payment),
-          );
-        } else if (!payer.payerId) {
+      concatMap((payment) => {
+        if (!user.payerId) {
           return from(
-            this._payerRepository.update(
-              { id: user.payer?.id },
-              { payerId: (payment.payer as any).payer_info.payer_id },
-            ),
+            this._usersService.updateOne(user.id, {
+              payerId: (payment.payer as any).payer_info.payer_id,
+            }),
           ).pipe(map(() => payment));
         }
 
@@ -250,11 +219,11 @@ export class OrdersService {
   public getOrderHistory(
     user: UserDto,
   ): Observable<{ count: number; payments: Payment[] }> {
-    if (!user.payer?.payerId) return of({ count: 0, payments: [] });
+    if (!user.payerId) return of({ count: 0, payments: [] });
 
     return from(
       this._paymentModel.find({
-        'paymentResponse.payer.payer_info.payer_id': user.payer?.payerId,
+        'paymentResponse.payer.payer_info.payer_id': user.payerId,
       }),
     ).pipe(
       map((payments) => ({
