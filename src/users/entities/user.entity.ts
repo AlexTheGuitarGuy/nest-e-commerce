@@ -25,9 +25,6 @@ export class UserEntity {
   @OneToMany(() => ProductEntity, (product) => product.seller)
   products!: ProductEntity[];
 
-  @Column({ nullable: true })
-  payerId?: string;
-
   @Column()
   address!: string;
 }

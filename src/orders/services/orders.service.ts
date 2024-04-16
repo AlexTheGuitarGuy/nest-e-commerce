@@ -8,7 +8,6 @@ import { UserDto } from 'src/users/dto/user.dto';
 import { EmailService } from 'src/email/services/email.service';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 import { tenantModels } from 'src/common/providers/tenant-models.provider';
-import { UsersService } from 'src/users/services/users.service';
 
 @Injectable()
 export class OrdersService {
@@ -16,7 +15,6 @@ export class OrdersService {
     @Inject(tenantModels.paymentModel.provide)
     private readonly _paymentModel: Model<Payment>,
     private readonly _cartService: CartService,
-    private readonly _usersService: UsersService,
     private readonly _emailService: EmailService,
     private readonly _emailConfirmationService: EmailConfirmationService,
   ) {}
@@ -120,17 +118,6 @@ export class OrdersService {
           }),
       ),
       concatMap((payment) => {
-        if (!user.payerId) {
-          return from(
-            this._usersService.updateOne(user.id, {
-              payerId: (payment.payer as any).payer_info.payer_id,
-            }),
-          ).pipe(map(() => payment));
-        }
-
-        return of(payment);
-      }),
-      concatMap((payment) => {
         return from(
           this._paymentModel.findOneAndUpdate(
             { 'paymentResponse.id': paymentId },
@@ -217,14 +204,17 @@ export class OrdersService {
   }
 
   public getOrderHistory(
-    user: UserDto,
+    payerId?: string,
   ): Observable<{ count: number; payments: Payment[] }> {
-    if (!user.payerId) return of({ count: 0, payments: [] });
-
+    console.log('payerId', payerId);
     return from(
-      this._paymentModel.find({
-        'paymentResponse.payer.payer_info.payer_id': user.payerId,
-      }),
+      this._paymentModel.find(
+        payerId
+          ? {
+              'paymentResponse.payer.payer_info.payer_id': payerId,
+            }
+          : {},
+      ),
     ).pipe(
       map((payments) => ({
         count: (payments as Payment[]).length,

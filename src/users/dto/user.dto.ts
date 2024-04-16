@@ -24,7 +24,6 @@ export class UserDto {
 
   products!: ProductDto[];
 
-  payerId?: string;
 
   @IsString()
   address!: string;
