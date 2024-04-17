@@ -8,20 +8,15 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { concatMap, from, map } from 'rxjs';
+import { map } from 'rxjs';
 import { OrdersService } from '../services/orders.service';
 import { UserDto } from 'src/users/dto/user.dto';
-import { Role } from 'src/common/enums/role.enum';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { UsersService } from 'src/users/services/users.service';
-import { plainToInstance } from 'class-transformer';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 
 @Controller('orders')
 export class OrdersController {
   constructor(
     private readonly _ordersService: OrdersService,
-    private readonly _usersService: UsersService,
     private readonly _emailConfirmationService: EmailConfirmationService,
   ) {}
 
@@ -68,17 +63,12 @@ export class OrdersController {
   }
 
   @Get('history')
-  getOrderHistory(@Req() req: Request) {
-    const user = req['user'] as UserDto;
-    return this._ordersService.getOrderHistory(user);
+  getOrderHistory() {
+    return this._ordersService.getOrderHistory();
   }
 
-  @Get('history/:userId')
-  @Roles(Role.Admin)
-  getOrderHistoryAdmin(@Param('userId') userId: number) {
-    return from(this._usersService.findOneById(userId)).pipe(
-      map((user) => plainToInstance(UserDto, user)),
-      concatMap((user) => this._ordersService.getOrderHistory(user)),
-    );
+  @Get('history/:payerId')
+  getOrderHistoryByPayerId(@Param('payerId') payerId: string) {
+    return this._ordersService.getOrderHistory(payerId);
   }
 }

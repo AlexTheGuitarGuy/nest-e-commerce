@@ -12,8 +12,10 @@ import Joi from '@hapi/joi';
       useFactory: () => {
         const mongooseOptions: MongooseModuleFactoryOptions = Joi.object({
           uri: Joi.string().required(),
+          dbName: Joi.string().required(),
         }).validate({
           uri: process.env.MONGODB_URI,
+          dbName: 'main',
         }).value;
 
         return mongooseOptions;

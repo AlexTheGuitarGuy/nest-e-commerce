@@ -29,6 +29,7 @@ export interface ProcessEnv {
   MINIO_ENDPOINT: string;
   MINIO_PORT: number;
   MINIO_SECRET_KEY: string;
+  MONGODB_DB_NAME: string;
   MONGODB_URI: string;
   PASSWORD_RESET_REDIRECT_URL: string;
   PAYPAL_CANCEL_URL: string;

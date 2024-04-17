@@ -1,7 +1,6 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import Joi from '@hapi/joi';
 
-console.log('postgres data', process.env.POSTGRES_PASSWORD);
 export const datasourceOptions: DataSourceOptions = {
   type: 'postgres',
   ...Joi.object({
