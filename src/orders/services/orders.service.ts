@@ -206,7 +206,6 @@ export class OrdersService {
   public getOrderHistory(
     payerId?: string,
   ): Observable<{ count: number; payments: Payment[] }> {
-    console.log('payerId', payerId);
     return from(
       this._paymentModel.find(
         payerId
