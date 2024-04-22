@@ -5,7 +5,7 @@ import { ProductDto } from 'src/products/dto/product.dto';
 
 export class UserDto {
   @IsNotEmpty()
-  id!: number;
+  id!: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -23,7 +23,6 @@ export class UserDto {
   role!: Role;
 
   products!: ProductDto[];
-
 
   @IsString()
   address!: string;

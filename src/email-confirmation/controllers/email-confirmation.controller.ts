@@ -31,25 +31,26 @@ export class EmailConfirmationController {
   @Post('resend-email-confirmation-link')
   @EmailConfirmationBypassed()
   resendEmailConfirmationLink(@Req() req: Request) {
-    const user = req.user;
     return this._emailConfirmationService
-      .resendEmailConfirmationLink(user)
+      .resendEmailConfirmationLink(req.user)
       .pipe(
         map(() => ({
-          message: `Verification link resent to ${user.email}`,
+          message: `Verification link resent to ${req.user.email}`,
         })),
       );
   }
 
   @Post('password-reset-confirm')
   updatePassword(@Query('token') token: string, @Req() req: Request) {
-    const hashedPassword: string =
+    const hashedPassword=
       this._emailConfirmationService.decodePasswordResetToken(token);
-    const user = req.user;
-    return this._usersService.updatePassword(user.id, hashedPassword).pipe(
-      map(() => ({
-        message: 'Password updated successfully',
-      })),
-    );
+
+    return this._usersService
+      .updateOne({ where: { id: req.user.id } }, { password: hashedPassword })
+      .pipe(
+        map(() => ({
+          message: 'Password updated successfully',
+        })),
+      );
   }
 }

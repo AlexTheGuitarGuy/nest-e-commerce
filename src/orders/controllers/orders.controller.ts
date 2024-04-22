@@ -24,8 +24,7 @@ export class OrdersController {
 
   @Post('create-payment')
   createPayment(@Req() req: Request) {
-    const user = req.user
-    return this._ordersService.createPayment(user);
+    return this._ordersService.createPayment(req.user);
   }
 
   @Post('send-payment-confirm-email')
@@ -35,9 +34,8 @@ export class OrdersController {
     @Query('paymentId') paymentId?: string,
     @Query('PayerID') payerId?: string,
   ) {
-    const user = req.user;
     return this._emailConfirmationService.sendPaypalOrderEmail(
-      user,
+      req.user,
       shouldContinue,
       paymentId,
       payerId,
@@ -46,8 +44,7 @@ export class OrdersController {
 
   @Get('execute-payment')
   executePayment(@Query('token') token: string, @Req() req: Request) {
-    const user = req.user;
-    return this._ordersService.executePayment(user, token).pipe(
+    return this._ordersService.executePayment(req.user, token).pipe(
       map(() => ({
         message: 'Payment executed successfully',
       })),
@@ -56,8 +53,7 @@ export class OrdersController {
 
   @Delete('cancel-payment')
   cancelPayment(@Query('token') token: string, @Req() req: Request) {
-    const user = req.user;
-    return this._ordersService.cancelPayment(user, token).pipe(
+    return this._ordersService.cancelPayment(req.user, token).pipe(
       map(() => ({
         message: 'Payment cancelled successfully',
       })),

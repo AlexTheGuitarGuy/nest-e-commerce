@@ -40,7 +40,6 @@ export class AuthService {
         .toDate(),
     });
 
-
     return res;
   }
 
@@ -50,7 +49,7 @@ export class AuthService {
       role: Role.Customer,
     });
 
-    return this._usersService.create(registeringUser).pipe(
+    return this._usersService.createOneWithPassword(registeringUser).pipe(
       concatMap((user) =>
         this._emailConfirmationService
           .sendEmailConfirmationLink(

@@ -7,7 +7,6 @@ import {
   Get,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -37,7 +36,7 @@ import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
 export class ProductsController {
   constructor(private readonly _productsService: ProductsService) {}
   private _checkSellerProductRelation(
-    productId: number,
+    productId: string,
     user: UserDto,
     productDto?: UpdateProductDto,
   ): Observable<ProductDto> {
@@ -81,7 +80,7 @@ export class ProductsController {
   }
 
   @Get(':id')
-  findOneById(@Param('id', ParseIntPipe) id: number) {
+  findOneById(@Param('id') id: string) {
     return this._productsService.findOneById(
       id,
       { seller: true, images: true },
@@ -91,21 +90,24 @@ export class ProductsController {
 
   @Post()
   @Roles(Role.Admin, Role.Seller)
-  create(@Body() createProductDto: CreateProductDto, @Req() req: Request) {
+  createOne(@Body() createProductDto: CreateProductDto, @Req() req: Request) {
     return this._productsService
-      .create(createProductDto, req.user)
+      .createOne(createProductDto, req.user)
       .pipe(map(() => ({ message: 'Product created' })));
   }
 
   @Patch(':id')
   @Roles(Role.Admin, Role.Seller)
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @Req() req: Request,
   ) {
-    const user = req.user;
-    return this._checkSellerProductRelation(id, user, updateProductDto).pipe(
+    return this._checkSellerProductRelation(
+      id,
+      req.user,
+      updateProductDto,
+    ).pipe(
       concatMap(() => {
         return this._productsService.updateOne(id, updateProductDto);
       }),
@@ -114,9 +116,8 @@ export class ProductsController {
 
   @Delete(':id')
   @Roles(Role.Admin, Role.Seller)
-  removeOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    const user = req.user;
-    return this._checkSellerProductRelation(id, user).pipe(
+  removeOne(@Param('id') id: string, @Req() req: Request) {
+    return this._checkSellerProductRelation(id, req.user).pipe(
       concatMap(() => {
         return this._productsService.removeOne(id).pipe(
           map(() => ({
@@ -137,14 +138,13 @@ export class ProductsController {
     }),
   )
   uploadImage(
-    @Param('id', ParseIntPipe) productId: number,
+    @Param('id') productId: string,
     @UploadedFile() image: BufferedFile,
     @Req() req: Request,
   ) {
-    const user = req.user;
     if (!image) throw new BadRequestException('Image is required');
 
-    return this._checkSellerProductRelation(productId, user).pipe(
+    return this._checkSellerProductRelation(productId, req.user).pipe(
       concatMap(() => this._productsService.uploadImage(productId, image)),
     );
   }
@@ -152,12 +152,11 @@ export class ProductsController {
   @Delete(':id/image/:imageId')
   @Roles(Role.Admin, Role.Seller)
   removeImage(
-    @Param('id', ParseIntPipe) productId: number,
-    @Param('imageId', ParseIntPipe) imageId: number,
+    @Param('id') productId: string,
+    @Param('imageId') imageId: string,
     @Req() req: Request,
   ) {
-    const user = req.user;
-    return this._checkSellerProductRelation(productId, user).pipe(
+    return this._checkSellerProductRelation(productId, req.user).pipe(
       concatMap(() => {
         return this._productsService.removeImage(productId, imageId);
       }),

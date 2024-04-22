@@ -54,9 +54,8 @@ export class AuthController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @Req() req: Request,
   ) {
-    const user = req.user;
     return this._authService
-      .sendResetPasswordEmail(user, updatePasswordDto)
+      .sendResetPasswordEmail(req.user, updatePasswordDto)
       .pipe(
         map(() => ({
           message:

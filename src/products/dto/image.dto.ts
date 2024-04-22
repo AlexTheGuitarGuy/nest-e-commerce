@@ -3,7 +3,7 @@ import { ProductDto } from './product.dto';
 
 export class ImageDto {
   @IsNotEmpty()
-  id!: number;
+  id!: string;
 
   @IsNotEmpty()
   url!: string;

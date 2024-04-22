@@ -21,8 +21,8 @@ export class CartService {
   ) {}
 
   private _getCart(
-    userId: number,
-    productId?: number,
+    userId: string,
+    productId?: string,
   ): Observable<CartDto & { product?: ProductDto }> {
     return this._redisClientService.get(`cart:${userId}`).pipe(
       concatMap((cartItems) => {
@@ -34,17 +34,21 @@ export class CartService {
           : of({ cartItems: cartItemsParsed, product: undefined });
       }),
       concatMap(({ cartItems, product }) =>
-        this._usersService.findOneById(userId).pipe(
-          map((user) => plainToInstance(UserDto, user)),
-          map((user) => ({ user, cartItems, product })),
-        ),
+        this._usersService
+          .findOneOrThrow({
+            where: { id: userId },
+          })
+          .pipe(
+            map((user) => plainToInstance(UserDto, user)),
+            map((user) => ({ user, cartItems, product })),
+          ),
       ),
     );
   }
 
   updateCart(
-    userId: number,
-    productId: number,
+    userId: string,
+    productId: string,
     quantity: number,
   ): Observable<'OK'> {
     return this._getCart(userId, productId).pipe(
@@ -70,7 +74,7 @@ export class CartService {
     );
   }
 
-  viewCart(userId: number): Observable<CartDto> {
+  viewCart(userId: string): Observable<CartDto> {
     return this._getCart(userId).pipe(
       map(({ cartItems, user }) =>
         plainToInstance(CartDto, {
@@ -81,7 +85,7 @@ export class CartService {
     );
   }
 
-  deleteFromCart(userId: number, productId?: number) {
+  deleteFromCart(userId: string, productId?: string) {
     return this._getCart(userId, productId).pipe(
       concatMap(({ cartItems }) => {
         if (!productId) {

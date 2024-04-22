@@ -12,36 +12,27 @@ import {
   FindOptionsWhere,
   Repository,
 } from 'typeorm';
-import {
-  Observable,
-  catchError,
-  forkJoin,
-  from,
-  map,
-  concatMap,
-  tap,
-} from 'rxjs';
+import { Observable, forkJoin, from, map, concatMap, tap } from 'rxjs';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { plainToClass, plainToInstance } from 'class-transformer';
 import { PostgresErrorCode } from 'src/common/enums/postgres-error-code.enum';
 import { ProductDto } from '../dto/product.dto';
 import { UserDto } from 'src/users/dto/user.dto';
-import { UserEntity } from 'src/users/entities/user.entity';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { ImageDto } from '../dto/image.dto';
 import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
 import { MinioClientService } from 'src/core/database/minio-client/services/minio-client.service';
 import { ImageEntity } from '../entities/image.entity';
+import { UsersService } from 'src/users/services/users.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(ProductEntity)
     private readonly _productsRepository: Repository<ProductEntity>,
-    @InjectRepository(UserEntity)
-    private readonly _usersRepository: Repository<UserEntity>,
     @InjectRepository(ImageEntity)
     private readonly _imagesRepository: Repository<ImageEntity>,
+    private readonly _usersService: UsersService,
     private readonly _minioClientService: MinioClientService,
   ) {}
 
@@ -77,16 +68,10 @@ export class ProductsService {
     );
   }
 
-  create(createProductDto: CreateProductDto, seller: UserDto) {
-    return from(
-      this._usersRepository.findOne({ where: { id: seller.id } }),
-    ).pipe(
-      map((foundSeller) => {
-        if (!foundSeller) {
-          throw new NotFoundException(`User with id ${seller.id} not found`);
-        }
-        return foundSeller;
-      }),
+  createOne(createProductDto: CreateProductDto, seller: UserDto) {
+    return from(this._usersService.findOneOrThrow({
+      where: { id: seller.id },
+    })).pipe(
       concatMap((foundSeller) => {
         const product = this._productsRepository.create({
           ...createProductDto,
@@ -95,14 +80,11 @@ export class ProductsService {
 
         return from(this._productsRepository.save(product));
       }),
-      catchError((error: any) => {
-        throw new BadRequestException(error.detail);
-      }),
       map((product) => plainToInstance(ProductDto, product)),
     );
   }
 
-  updateOne(id: number, updateProductDto: UpdateProductDto) {
+  updateOne(id: string, updateProductDto: UpdateProductDto) {
     return from(this._productsRepository.findOne({ where: { id } })).pipe(
       map((found) => {
         if (!found) {
@@ -124,14 +106,11 @@ export class ProductsService {
           throw new InternalServerErrorException('Failed to update product');
         }
       }),
-      catchError((error: any) => {
-        throw new BadRequestException(error.detail);
-      }),
       map((product) => plainToInstance(ProductDto, product)),
     );
   }
 
-  removeOne(id: number) {
+  removeOne(id: string) {
     return from(this._productsRepository.delete(id)).pipe(
       tap((deleted) => {
         if (deleted.affected === 0) {
@@ -142,7 +121,7 @@ export class ProductsService {
   }
 
   findOneById(
-    id: number,
+    id: string,
     relations: FindOptionsRelations<ProductEntity>,
     select: FindOptionsSelect<ProductEntity>,
   ) {
@@ -163,7 +142,7 @@ export class ProductsService {
     );
   }
 
-  uploadImage(productId: number, image: BufferedFile) {
+  uploadImage(productId: string, image: BufferedFile) {
     return from(
       this.findOneById(productId, { seller: true, images: true }, {}),
     ).pipe(
@@ -188,7 +167,7 @@ export class ProductsService {
     );
   }
 
-  removeImage(productId: number, imageId: number) {
+  removeImage(productId: string, imageId: string) {
     return from(
       this.findOneById(productId, { seller: true, images: true }, {}),
     ).pipe(

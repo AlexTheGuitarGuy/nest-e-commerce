@@ -3,107 +3,43 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Observable, from, concatMap, map, of, catchError, tap } from 'rxjs';
+import { Observable, from, concatMap, map, of } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import {
-  DeleteResult,
-  FindOptionsRelations,
-  FindOptionsSelect,
-  FindOptionsWhere,
-  Repository,
-} from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserEntity } from '../entities/user.entity';
-import { UpdateUserDto } from '../dto/update-user.dto';
-import { PostgresErrorCode } from 'src/common/enums/postgres-error-code.enum';
+import { TypeormCrudRepository } from 'src/common/typeorm/typeorm-crud.repository';
 
 @Injectable()
-export class UsersService {
+export class UsersService extends TypeormCrudRepository<UserEntity> {
   constructor(
     @InjectRepository(UserEntity)
     private readonly _usersRepository: Repository<UserEntity>,
-  ) {}
+  ) {
+    super(_usersRepository);
+  }
 
-  create(createUserDto: CreateUserDto): Observable<UserEntity> {
+  createOneWithPassword(createUserDto: CreateUserDto): Observable<UserEntity> {
     const { password, ...rest } = createUserDto;
 
     return from(bcrypt.hash(password, 10)).pipe(
-      concatMap((hashedPassword) => {
-        const user = this._usersRepository.create({
-          ...rest,
-          password: hashedPassword,
-        });
-
-        return from(this._usersRepository.save(user));
-      }),
-      catchError((error: any) => {
-        throw new BadRequestException(error.detail);
-      }),
+      concatMap((hashedPassword) =>
+        this.createOne({ ...rest, password: hashedPassword }),
+      ),
     );
   }
 
-  findMany(
-    where: FindOptionsWhere<UserEntity>,
-    relations: FindOptionsRelations<UserEntity>,
-    select: FindOptionsSelect<UserEntity>,
-    take: number = 50,
-    skip: number = 0,
-  ): Observable<{ items: UserEntity[]; itemsCount: number }> {
+  findManyPaginated({
+    take = 50,
+    skip = 0,
+  }): Observable<{ items: UserEntity[]; itemsCount: number }> {
     return from(
-      this._usersRepository.findAndCount({
-        where,
-        relations,
-        select: { ...select },
+      this.findMany({
         take,
         skip,
       }),
-    ).pipe(
-      map(([items, itemsCount]) => {
-        const logPayload = {
-          where,
-          relations,
-          select,
-        };
-        if (items.length) {
-          Object.assign(logPayload, { ids: items.map((e) => e.id) });
-        }
-
-        return { items, itemsCount };
-      }),
-    );
-  }
-
-  removeOne(id: number): Observable<DeleteResult> {
-    return from(this._usersRepository.delete(id)).pipe(
-      tap((deleted) => {
-        if (deleted.affected === 0) {
-          throw new NotFoundException(`User with id ${id} not found`);
-        }
-      }),
-    );
-  }
-
-  findOneByUsername(username: string): Observable<UserEntity> {
-    return from(this._usersRepository.findOne({ where: { username } })).pipe(
-      map((found) => {
-        if (!found) {
-          throw new NotFoundException(`User not found`);
-        }
-        return found;
-      }),
-    );
-  }
-
-  findOneById(id: number): Observable<UserEntity> {
-    return from(this._usersRepository.findOne({ where: { id } })).pipe(
-      map((found) => {
-        if (!found) {
-          throw new NotFoundException(`User not found`);
-        }
-        return found;
-      }),
-    );
+    ).pipe(map((users) => ({ items: users, itemsCount: users.length })));
   }
 
   validate(username: string, password: string): Observable<UserEntity | null> {
@@ -117,38 +53,6 @@ export class UsersService {
           return of(null);
 
         return from(this._usersRepository.save(user));
-      }),
-    );
-  }
-
-  updateOne(id: number, updateUserDto: UpdateUserDto): Observable<UserEntity> {
-    return from(this._usersRepository.findOne({ where: { id } })).pipe(
-      map((foundUser) => {
-        if (!foundUser) {
-          throw new NotFoundException(`User with id ${id} not found`);
-        }
-        return foundUser;
-      }),
-      concatMap((foundUser) => {
-        const updated = this._usersRepository.merge(foundUser, updateUserDto);
-        return from(this._usersRepository.save(updated));
-      }),
-      catchError((error: any) => {
-        if (error?.code === PostgresErrorCode.UniqueViolation) {
-          throw new BadRequestException('This user already exists');
-        }
-        throw new BadRequestException(error.detail);
-      }),
-    );
-  }
-
-  updatePassword(id: number, newPassword: string) {
-    return this.findOneById(id).pipe(
-      concatMap((foundUser) => {
-        const updated = this._usersRepository.merge(foundUser, {
-          password: newPassword,
-        });
-        return from(this._usersRepository.save(updated));
       }),
     );
   }

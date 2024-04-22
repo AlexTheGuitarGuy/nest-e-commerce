@@ -12,8 +12,8 @@ import {
 
 @Entity()
 export class ProductEntity {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @Column({ unique: true })
   name!: string;

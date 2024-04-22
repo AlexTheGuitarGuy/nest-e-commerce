@@ -13,7 +13,7 @@ import { ImageDto } from './image.dto';
 
 export class ProductDto {
   @IsNotEmpty()
-  id!: number;
+  id!: string;
 
   @IsNotEmpty()
   name!: string;

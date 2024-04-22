@@ -7,7 +7,6 @@ import {
   UseInterceptors,
   Param,
   Patch,
-  ParseIntPipe,
   Delete,
   Req,
   ForbiddenException,
@@ -32,9 +31,9 @@ export class UsersController {
 
   @Post()
   @Roles(Role.Admin)
-  create(@Body() createUserDto: CreateUserDto) {
+  createOne(@Body() createUserDto: CreateUserDto) {
     return this._usersService
-      .create(createUserDto)
+      .createOneWithPassword(createUserDto)
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
@@ -44,7 +43,7 @@ export class UsersController {
     @Query() pageOptionsDto: PageOptionsDto,
   ): Observable<PageDto<UserDto>> {
     const { take, skip } = pageOptionsDto;
-    return this._usersService.findMany({}, {}, {}, take, skip).pipe(
+    return this._usersService.findManyPaginated({ take, skip }).pipe(
       map(({ items, itemsCount }) => {
         const products = items.map((product) =>
           plainToInstance(UserDto, product),
@@ -62,45 +61,54 @@ export class UsersController {
   @UseInterceptors(ClassSerializerInterceptor)
   findOneByUsername(@Body() body: { username: string }): Observable<UserDto> {
     return this._usersService
-      .findOneByUsername(body.username)
+      .findOneOrThrow({
+        where: { username: body.username },
+      })
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Get(':id')
-  findOneById(@Param('id', ParseIntPipe) id: number): Observable<UserDto> {
+  findOneById(@Param('id') id: string): Observable<UserDto> {
     return this._usersService
-      .findOneById(id)
+      .findOneOrThrow({
+        where: { id },
+      })
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Patch(':id')
   @Roles(Role.Admin)
-  updateAdmin(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
+  updateAdmin(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this._usersService
-      .updateOne(id, updateUserDto)
+      .updateOne(
+        {
+          where: { id },
+        },
+        updateUserDto,
+      )
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Patch()
   update(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
-    const userId = req.user.id;
     return this._usersService
-      .updateOne(userId, updateUserDto)
+      .updateOne(
+        {
+          where: { id: req.user.id },
+        },
+        updateUserDto,
+      )
       .pipe(map((user) => plainToInstance(UserDto, user)));
   }
 
   @Delete(':id')
-  removeOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+  removeOne(@Param('id') id: string, @Req() req: Request) {
     if (req.user.id !== id && req.user.role !== Role.Admin)
       throw new ForbiddenException();
 
-    return this._usersService.removeOne(id).pipe(
-      map(() => ({
-        message: 'User deleted',
-      })),
-    );
+    return this._usersService
+      .removeOne({
+        where: { id },
+      })
   }
 }
