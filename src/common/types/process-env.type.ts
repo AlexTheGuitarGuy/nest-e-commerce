@@ -1,15 +1,10 @@
-export const NODE_ENV = [
-  'local',
-  'development',
-  'staging',
-  'production',
-] as const;
+export const NODE_ENV = ['local', 'prod'] as const;
 export type NodeEnv = (typeof NODE_ENV)[number];
 
 export interface ProcessEnv {
   CORS_ORIGIN: string;
   DOPPLER_CONFIG: string;
-  DOPPLER_ENVIRONMENT: string;
+  DOPPLER_ENVIRONMENT: NodeEnv;
   DOPPLER_PROJECT: string;
   EMAIL_CONFIRMATION_REDIRECT_URL: string;
   EMAIL_PASS: string;

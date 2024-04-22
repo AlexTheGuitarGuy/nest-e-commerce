@@ -3,7 +3,7 @@ import { UserDto } from 'src/users/dto/user.dto';
 
 export declare global {
   namespace NodeJS {
-    type ProcessEnv = ProcessEnvType;
+    interface ProcessEnv extends ProcessEnvType {}
   }
 
   namespace Express {

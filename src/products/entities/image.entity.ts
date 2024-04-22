@@ -16,7 +16,7 @@ export class ImageEntity {
   url!: string;
 
   @Column({ nullable: true })
-  name!: string;
+  name?: string;
 
   @ManyToOne(() => ProductEntity, (product) => product.id, {
     onDelete: 'CASCADE',
