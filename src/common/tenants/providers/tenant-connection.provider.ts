@@ -6,12 +6,12 @@ import { Request } from 'express';
 
 export const tenantConnectionProvider = {
   provide: 'TENANT_CONNECTION',
-  useFactory: async (request: Request, connection: Connection) => {
-    if (!request.userId)
+  useFactory: async (req: Request, connection: Connection) => {
+    if (!req.tenantId)
       throw new InternalServerErrorException(
         'Make sure to apply tenant middleware',
       );
-    return connection.useDb(`t_${request.userId}`);
+    return connection.useDb(`t_${req.tenantId}`);
   },
   inject: [REQUEST, getConnectionToken()],
 };

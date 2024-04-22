@@ -12,7 +12,6 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import { UserDto } from 'src/users/dto/user.dto';
 import { map, tap } from 'rxjs';
 import { EmailConfirmationBypassed } from 'src/email-confirmation/decorators/email-confirmation-bypassed.decorator';
 import { RegisterDto } from '../dto/register.dto';
@@ -26,7 +25,7 @@ export class AuthController {
   @Public()
   @Post('login')
   login(@Req() req: Request, @Res() res: Response) {
-    this._authService.login(req.user as UserDto, res);
+    this._authService.login(req.user, res);
 
     res.send({ message: 'Login successful' });
   }
@@ -55,7 +54,7 @@ export class AuthController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @Req() req: Request,
   ) {
-    const user = req.user as UserDto;
+    const user = req.user;
     return this._authService
       .sendResetPasswordEmail(user, updatePasswordDto)
       .pipe(

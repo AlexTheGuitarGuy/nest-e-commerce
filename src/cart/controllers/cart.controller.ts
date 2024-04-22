@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { UpdateCartDto } from '../dto/update-cart.dto';
-import { UserDto } from 'src/users/dto/user.dto';
 import { CartService } from '../services/cart.service';
 import { map } from 'rxjs';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -21,7 +20,7 @@ export class CartController {
 
   @Get()
   getCartCurrentUser(@Req() req: Request) {
-    const userId = (req['user'] as UserDto).id;
+    const userId = req.user.id;
     return this._cartService.viewCart(userId);
   }
 
@@ -36,7 +35,7 @@ export class CartController {
     @Req() req: Request,
     @Body() updateCartDto: UpdateCartDto,
   ) {
-    const userId = (req['user'] as UserDto).id;
+    const userId = req.user.id;
     return this._cartService
       .updateCart(userId, updateCartDto.productId, updateCartDto.quantity)
       .pipe(map(() => ({ message: 'Cart updated' })));
@@ -58,7 +57,7 @@ export class CartController {
     @Req() req: Request,
     @Param('productId') productId: number,
   ) {
-    const userId = (req['user'] as UserDto).id;
+    const userId = req.user.id;
     return this._cartService
       .deleteFromCart(userId, productId)
       .pipe(map(() => ({ message: 'Cart updated' })));
@@ -77,7 +76,7 @@ export class CartController {
 
   @Delete()
   deleteCartCurrentUser(@Req() req: Request) {
-    const userId = (req['user'] as UserDto).id;
+    const userId = req.user.id;
     return this._cartService
       .deleteFromCart(userId)
       .pipe(map(() => ({ message: 'Cart updated' })));

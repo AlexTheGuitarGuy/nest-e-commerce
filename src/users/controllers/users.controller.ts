@@ -10,7 +10,6 @@ import {
   ParseIntPipe,
   Delete,
   Req,
-  UnauthorizedException,
   ForbiddenException,
   Query,
 } from '@nestjs/common';
@@ -87,7 +86,7 @@ export class UsersController {
 
   @Patch()
   update(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
-    const userId = (req.user as UserDto).id;
+    const userId = req.user.id;
     return this._usersService
       .updateOne(userId, updateUserDto)
       .pipe(map((user) => plainToInstance(UserDto, user)));
@@ -95,15 +94,8 @@ export class UsersController {
 
   @Delete(':id')
   removeOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    if (
-      (req.user as UserDto).id !== id &&
-      (req.user as UserDto).role !== Role.Admin
-    ) {
-      if ((req.user as UserDto).role !== Role.Admin)
-        throw new ForbiddenException();
-      else if ((req.user as UserDto).id !== id)
-        throw new UnauthorizedException();
-    }
+    if (req.user.id !== id && req.user.role !== Role.Admin)
+      throw new ForbiddenException();
 
     return this._usersService.removeOne(id).pipe(
       map(() => ({

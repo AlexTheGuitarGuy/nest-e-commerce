@@ -7,12 +7,12 @@ import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
 import { EmailService } from 'src/email/services/email.service';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
-import { tenantModels } from 'src/common/providers/tenant-models.provider';
+import { TenantModels } from 'src/common/tenants/providers/tenant-models.provider';
 
 @Injectable()
 export class OrdersService {
   constructor(
-    @Inject(tenantModels.paymentModel.provide)
+    @Inject(TenantModels.paymentModel)
     private readonly _paymentModel: Model<Payment>,
     private readonly _cartService: CartService,
     private readonly _emailService: EmailService,

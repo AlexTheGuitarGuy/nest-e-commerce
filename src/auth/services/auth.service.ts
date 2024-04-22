@@ -40,14 +40,6 @@ export class AuthService {
         .toDate(),
     });
 
-    res.cookie('user_id', user.id, {
-      httpOnly: true,
-      secure: process.env.DOPPLER_ENVIRONMENT === 'prod',
-      sameSite: 'lax',
-      expires: dayjs()
-        .add(process.env.JWT_SESSION_DURATION, 'seconds')
-        .toDate(),
-    });
 
     return res;
   }

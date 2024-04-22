@@ -93,7 +93,7 @@ export class ProductsController {
   @Roles(Role.Admin, Role.Seller)
   create(@Body() createProductDto: CreateProductDto, @Req() req: Request) {
     return this._productsService
-      .create(createProductDto, req.user as UserDto)
+      .create(createProductDto, req.user)
       .pipe(map(() => ({ message: 'Product created' })));
   }
 
@@ -104,7 +104,7 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
     @Req() req: Request,
   ) {
-    const user = req.user as UserDto;
+    const user = req.user;
     return this._checkSellerProductRelation(id, user, updateProductDto).pipe(
       concatMap(() => {
         return this._productsService.updateOne(id, updateProductDto);
@@ -115,7 +115,7 @@ export class ProductsController {
   @Delete(':id')
   @Roles(Role.Admin, Role.Seller)
   removeOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    const user = req.user as UserDto;
+    const user = req.user;
     return this._checkSellerProductRelation(id, user).pipe(
       concatMap(() => {
         return this._productsService.removeOne(id).pipe(
@@ -141,7 +141,7 @@ export class ProductsController {
     @UploadedFile() image: BufferedFile,
     @Req() req: Request,
   ) {
-    const user = req.user as UserDto;
+    const user = req.user;
     if (!image) throw new BadRequestException('Image is required');
 
     return this._checkSellerProductRelation(productId, user).pipe(
@@ -156,7 +156,7 @@ export class ProductsController {
     @Param('imageId', ParseIntPipe) imageId: number,
     @Req() req: Request,
   ) {
-    const user = req.user as UserDto;
+    const user = req.user;
     return this._checkSellerProductRelation(productId, user).pipe(
       concatMap(() => {
         return this._productsService.removeImage(productId, imageId);

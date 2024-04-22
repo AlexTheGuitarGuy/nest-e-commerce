@@ -9,9 +9,9 @@ import { Payment, PaymentSchema } from './entities/payment.schema';
 import Joi from '@hapi/joi';
 import { EmailModule } from 'src/email/email.module';
 import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
-import { tenantModels } from 'src/common/providers/tenant-models.provider';
-import { tenantConnectionProvider } from 'src/common/providers/tenant-connection.provider';
-import { TenantsMiddleware } from 'src/common/middlewares/tenants.middleware';
+import { tenantConnectionProvider } from 'src/common/tenants/providers/tenant-connection.provider';
+import { tenantModels } from 'src/common/tenants/providers/tenant-models.provider';
+import { TenantsMiddleware } from 'src/common/tenants/middlewares/tenants.middleware';
 
 @Module({
   providers: [

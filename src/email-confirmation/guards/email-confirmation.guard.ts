@@ -25,9 +25,9 @@ export class EmailConfirmationGuard implements CanActivate {
       );
 
     if (isPublic || emailConfirmationBypassed) return true;
-    const request = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest();
 
-    if (!request.user?.isEmailConfirmed) {
+    if (!req.user?.isEmailConfirmed) {
       throw new ForbiddenException('Email not confirmed');
     }
 

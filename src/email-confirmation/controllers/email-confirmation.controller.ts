@@ -31,7 +31,7 @@ export class EmailConfirmationController {
   @Post('resend-email-confirmation-link')
   @EmailConfirmationBypassed()
   resendEmailConfirmationLink(@Req() req: Request) {
-    const user = req.user as UserDto;
+    const user = req.user;
     return this._emailConfirmationService
       .resendEmailConfirmationLink(user)
       .pipe(
@@ -45,7 +45,7 @@ export class EmailConfirmationController {
   updatePassword(@Query('token') token: string, @Req() req: Request) {
     const hashedPassword: string =
       this._emailConfirmationService.decodePasswordResetToken(token);
-    const user = req.user as UserDto;
+    const user = req.user;
     return this._usersService.updatePassword(user.id, hashedPassword).pipe(
       map(() => ({
         message: 'Password updated successfully',

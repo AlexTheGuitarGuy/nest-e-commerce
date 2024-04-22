@@ -1,4 +1,5 @@
 import { ProcessEnv as ProcessEnvType } from 'src/common/types/process-env.type';
+import { UserDto } from 'src/users/dto/user.dto';
 
 export declare global {
   namespace NodeJS {
@@ -7,7 +8,14 @@ export declare global {
 
   namespace Express {
     interface Request {
-      userId?: string;
+      tenantId?: string;
+      user: UserDto;
     }
+  }
+}
+
+declare module 'http' {
+  interface IncomingHttpHeaders {
+    'x-tenant-id'?: string;
   }
 }

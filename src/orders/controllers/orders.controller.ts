@@ -6,13 +6,15 @@ import {
   Post,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { map } from 'rxjs';
 import { OrdersService } from '../services/orders.service';
-import { UserDto } from 'src/users/dto/user.dto';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
+import { TenantIntegrityGuard } from 'src/common/tenants/guards/tenant-integrity.guard';
 
+@UseGuards(TenantIntegrityGuard)
 @Controller('orders')
 export class OrdersController {
   constructor(
@@ -22,7 +24,7 @@ export class OrdersController {
 
   @Post('create-payment')
   createPayment(@Req() req: Request) {
-    const user = req['user'] as UserDto;
+    const user = req.user
     return this._ordersService.createPayment(user);
   }
 
@@ -33,7 +35,7 @@ export class OrdersController {
     @Query('paymentId') paymentId?: string,
     @Query('PayerID') payerId?: string,
   ) {
-    const user = req['user'] as UserDto;
+    const user = req.user;
     return this._emailConfirmationService.sendPaypalOrderEmail(
       user,
       shouldContinue,
@@ -44,7 +46,7 @@ export class OrdersController {
 
   @Get('execute-payment')
   executePayment(@Query('token') token: string, @Req() req: Request) {
-    const user = req['user'] as UserDto;
+    const user = req.user;
     return this._ordersService.executePayment(user, token).pipe(
       map(() => ({
         message: 'Payment executed successfully',
@@ -54,7 +56,7 @@ export class OrdersController {
 
   @Delete('cancel-payment')
   cancelPayment(@Query('token') token: string, @Req() req: Request) {
-    const user = req['user'] as UserDto;
+    const user = req.user;
     return this._ordersService.cancelPayment(user, token).pipe(
       map(() => ({
         message: 'Payment cancelled successfully',
