@@ -1,5 +1,6 @@
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -18,9 +19,15 @@ export class ImageEntity {
   @Column({ nullable: true })
   name?: string;
 
+  @Column({ name: 'product_id' })
+  productId!: string;
+
   @ManyToOne(() => ProductEntity, (product) => product.id, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'product_id' })
-  product?: ProductEntity;
+  product!: ProductEntity;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

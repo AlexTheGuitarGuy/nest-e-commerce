@@ -1,19 +1,9 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
-import { ProductCategory } from 'src/common/enums/product-category.enum';
+import { PickType } from '@nestjs/swagger';
+import { ProductDto } from './product.dto';
 
-export class CreateProductDto {
-  @IsNotEmpty()
-  name!: string;
-
-  @IsNotEmpty()
-  @IsNumber()
-  @Min(1, { message: 'Price must be greater than 0' })
-  price!: number;
-
-  @IsEnum(ProductCategory)
-  @IsNotEmpty()
-  category!: ProductCategory;
-
-  @IsOptional()
-  description?: string;
-}
+export class CreateProductDto extends PickType(ProductDto, [
+  'name',
+  'price',
+  'category',
+  'description',
+]) {}

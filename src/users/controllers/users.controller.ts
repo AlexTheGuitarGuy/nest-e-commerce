@@ -43,15 +43,13 @@ export class UsersController {
     @Query() pageOptionsDto: PageOptionsDto,
   ): Observable<PageDto<UserDto>> {
     const { take, skip } = pageOptionsDto;
-    return this._usersService.findManyPaginated({ take, skip }).pipe(
-      map(({ items, itemsCount }) => {
-        const products = items.map((product) =>
-          plainToInstance(UserDto, product),
-        );
+    return this._usersService.findMany({ take, skip }).pipe(
+      map((items) => {
+        const users = items.map((product) => plainToInstance(UserDto, product));
 
         return new PageDto(
-          products,
-          new PageMetaDto({ itemCount: itemsCount, pageOptionsDto }),
+          users,
+          new PageMetaDto({ itemCount: users.length, pageOptionsDto }),
         );
       }),
     );
@@ -106,9 +104,8 @@ export class UsersController {
     if (req.user.id !== id && req.user.role !== Role.Admin)
       throw new ForbiddenException();
 
-    return this._usersService
-      .removeOne({
-        where: { id },
-      })
+    return this._usersService.removeOne({
+      where: { id },
+    });
   }
 }

@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   Matches,
@@ -79,4 +80,8 @@ export class UserDto implements Fields {
   @ApiProperty()
   @IsNotEmpty()
   isEmailConfirmed!: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  deletedAt?: Date;
 }

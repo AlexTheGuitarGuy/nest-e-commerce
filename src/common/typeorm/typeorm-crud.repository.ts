@@ -1,5 +1,5 @@
-import {  NotFoundException } from '@nestjs/common';
-import { Observable, from, map, concatMap } from 'rxjs';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Observable, from, map, concatMap, catchError } from 'rxjs';
 import {
   DeepPartial,
   FindManyOptions,
@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { LogMethods } from '../decorators/logging.decorator';
+import { PostgresErrorCode } from '../enums/postgres-error-code.enum';
 
 interface Entity {
   id: string;
@@ -51,9 +52,18 @@ export class TypeormCrudRepository<E extends Entity>
 {
   constructor(private readonly repository: Repository<E>) {}
 
-  createOne(dto: DeepPartial<E>): Observable<E> {
+  createOne(dto: DeepPartial<E>, entityName?: string): Observable<E> {
     const entity: E = this.repository.create(dto);
-    return from(this.repository.save(entity));
+    return from(this.repository.save(entity)).pipe(
+      catchError((error) => {
+        if (error?.code === PostgresErrorCode.UniqueViolation) {
+          throw new BadRequestException(
+            `This ${entityName || 'entity'} already exists`,
+          );
+        }
+        throw error;
+      }),
+    );
   }
 
   createMany(dtos: DeepPartial<E>[]): Observable<E> {

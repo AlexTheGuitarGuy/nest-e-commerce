@@ -30,21 +30,9 @@ export class UsersService extends TypeormCrudRepository<UserEntity> {
     );
   }
 
-  findManyPaginated({
-    take = 50,
-    skip = 0,
-  }): Observable<{ items: UserEntity[]; itemsCount: number }> {
-    return from(
-      this.findMany({
-        take,
-        skip,
-      }),
-    ).pipe(map((users) => ({ items: users, itemsCount: users.length })));
-  }
-
   validate(username: string, password: string): Observable<UserEntity | null> {
     return from(
-      this._usersRepository.findOne({
+      this.findOneOrThrow({
         where: { username },
       }),
     ).pipe(
@@ -58,7 +46,7 @@ export class UsersService extends TypeormCrudRepository<UserEntity> {
   }
 
   markEmailAsConfirmed(email: string): Observable<UserEntity> {
-    return from(this._usersRepository.findOne({ where: { email } })).pipe(
+    return from(this.findOneOrThrow({ where: { email } })).pipe(
       map((foundUser) => {
         if (!foundUser) {
           throw new NotFoundException(`User with email ${email} not found`);

@@ -29,7 +29,7 @@ export class CartService {
         const cartItemsParsed = JSON.parse(cartItems || '[]');
         return productId
           ? this._productsService
-              .findOneById(productId, {}, {})
+              .findOneOrThrow({ where: { id: productId } })
               .pipe(map((product) => ({ cartItems: cartItemsParsed, product })))
           : of({ cartItems: cartItemsParsed, product: undefined });
       }),

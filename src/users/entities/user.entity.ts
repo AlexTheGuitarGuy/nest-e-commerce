@@ -1,6 +1,12 @@
 import { Role } from 'src/common/enums/role.enum';
 import { ProductEntity } from 'src/products/entities/product.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class UserEntity {
@@ -27,4 +33,7 @@ export class UserEntity {
 
   @Column()
   address!: string;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

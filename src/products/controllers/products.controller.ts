@@ -41,7 +41,7 @@ export class ProductsController {
     productDto?: UpdateProductDto,
   ): Observable<ProductDto> {
     return this._productsService
-      .findOneById(productId, { seller: true }, {})
+      .findOneOrThrow({ where: { id: productId }, relations: { seller: true } })
       .pipe(
         tap((product) => {
           if (user.role !== Role.Admin) {
@@ -64,16 +64,23 @@ export class ProductsController {
   ): Observable<PageDto<ProductDto>> {
     const { take, skip } = pageOptionsDto;
     return this._productsService
-      .findMany({}, { seller: true, images: true }, {}, take, skip)
+      .findMany({
+        take,
+        skip,
+        relations: {
+          seller: true,
+          images: true,
+        },
+      })
       .pipe(
-        map(({ items, itemsCount }) => {
+        map((items) => {
           const products = items.map((product) =>
             plainToInstance(ProductDto, product),
           );
 
           return new PageDto(
             products,
-            new PageMetaDto({ itemCount: itemsCount, pageOptionsDto }),
+            new PageMetaDto({ itemCount: products.length, pageOptionsDto }),
           );
         }),
       );
@@ -81,24 +88,24 @@ export class ProductsController {
 
   @Get(':id')
   findOneById(@Param('id') id: string) {
-    return this._productsService.findOneById(
-      id,
-      { seller: true, images: true },
-      {},
-    );
+    return this._productsService.findOneOrThrow({
+      where: { id },
+      relations: { seller: true, images: true },
+    });
   }
 
   @Post()
   @Roles(Role.Admin, Role.Seller)
   createOne(@Body() createProductDto: CreateProductDto, @Req() req: Request) {
-    return this._productsService
-      .createOne(createProductDto, req.user)
-      .pipe(map(() => ({ message: 'Product created' })));
+    return this._productsService.createOne({
+      ...createProductDto,
+      seller: req.user,
+    });
   }
 
   @Patch(':id')
   @Roles(Role.Admin, Role.Seller)
-  update(
+  updateOne(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @Req() req: Request,
@@ -108,9 +115,9 @@ export class ProductsController {
       req.user,
       updateProductDto,
     ).pipe(
-      concatMap(() => {
-        return this._productsService.updateOne(id, updateProductDto);
-      }),
+      concatMap(() =>
+        this._productsService.updateOne({ where: { id } }, updateProductDto),
+      ),
     );
   }
 
@@ -119,7 +126,7 @@ export class ProductsController {
   removeOne(@Param('id') id: string, @Req() req: Request) {
     return this._checkSellerProductRelation(id, req.user).pipe(
       concatMap(() => {
-        return this._productsService.removeOne(id).pipe(
+        return this._productsService.removeOne({ where: { id } }).pipe(
           map(() => ({
             result: HttpStatus.OK,
             message: 'Product deleted',

@@ -20,7 +20,7 @@ export class MinioClientService {
   public upload(
     file: BufferedFile,
     baseBucket: string = this.baseBucket || '',
-  ): Observable<{ url: string; filename: string }> {
+  ): Observable<{ url: string; fileName: string }> {
     this.logger.log('uploading file: ', file.originalname);
     if (!(file.mimetype.includes('jpeg') || file.mimetype.includes('png'))) {
       throw new HttpException('Error uploading file', HttpStatus.BAD_REQUEST);
@@ -36,15 +36,12 @@ export class MinioClientService {
     );
     const metaData = {
       'Content-Type': file.mimetype,
-      'X-Amz-Meta-Testing': 1234,
     };
-    let filename = hashedFileName + ext;
-    const fileName: string = `${filename}`;
-    const fileBuffer = file.buffer;
+    let fileName = (hashedFileName + ext).toString();
     this.client.putObject(
       baseBucket,
       fileName,
-      fileBuffer,
+      file.buffer,
       file.size,
       metaData,
       function (err) {
@@ -57,8 +54,8 @@ export class MinioClientService {
     );
 
     return of({
-      url: `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${process.env.MINIO_BUCKET_NAME}/${filename}`,
-      filename,
+      url: `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${process.env.MINIO_BUCKET_NAME}/${fileName}`,
+      fileName,
     });
   }
 
@@ -67,17 +64,13 @@ export class MinioClientService {
     baseBucket: string = this.baseBucket || '',
   ): Observable<void> {
     this.logger.log('deleting file: ', objetName);
-    this.client.removeObject(
-      baseBucket,
-      objetName,
-      function (err) {
-        if (err)
-          throw new HttpException(
-            'Oops Something wrong happend',
-            HttpStatus.BAD_REQUEST,
-          );
-      },
-    );
+    this.client.removeObject(baseBucket, objetName, function (err) {
+      if (err)
+        throw new HttpException(
+          'Oops Something wrong happend',
+          HttpStatus.BAD_REQUEST,
+        );
+    });
     return of(void 0);
   }
 }

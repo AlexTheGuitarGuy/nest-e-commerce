@@ -4,6 +4,7 @@ import { ImageEntity } from './image.entity';
 import {
   Check,
   Column,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
@@ -32,5 +33,8 @@ export class ProductEntity {
   seller!: UserEntity;
 
   @OneToMany(() => ImageEntity, (image) => image.product, { cascade: true })
-  images?: ImageEntity[];
+  images!: ImageEntity[];
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

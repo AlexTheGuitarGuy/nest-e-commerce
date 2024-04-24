@@ -42,7 +42,7 @@ export class EmailConfirmationController {
 
   @Post('password-reset-confirm')
   updatePassword(@Query('token') token: string, @Req() req: Request) {
-    const hashedPassword=
+    const hashedPassword =
       this._emailConfirmationService.decodePasswordResetToken(token);
 
     return this._usersService

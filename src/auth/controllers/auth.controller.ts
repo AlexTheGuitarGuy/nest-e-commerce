@@ -26,7 +26,6 @@ export class AuthController {
   @Post('login')
   login(@Req() req: Request, @Res() res: Response) {
     this._authService.login(req.user, res);
-
     res.send({ message: 'Login successful' });
   }
 
