@@ -3,15 +3,14 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
-  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
   Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -20,43 +19,21 @@ import { ProductsService } from '../services/products.service';
 import { ProductDto } from '../dto/product.dto';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { plainToInstance } from 'class-transformer';
-import { Observable, map, tap, concatMap } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { PageDto } from 'src/common/dto/page.dto';
 import { PageMetaDto } from 'src/common/dto/page-meta.dto';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { UserDto } from 'src/users/dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { ImageFileFilter } from 'src/common/filters/image-file.filter';
 import { MAX_FILE_SIZE } from 'src/common/constants';
 import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
+import { SellerIntegrityGuard } from '../guards/seller-integrity.guard';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly _productsService: ProductsService) {}
-  private _checkSellerProductRelation(
-    productId: string,
-    user: UserDto,
-    productDto?: UpdateProductDto,
-  ): Observable<ProductDto> {
-    return this._productsService
-      .findOneOrThrow({ where: { id: productId }, relations: { seller: true } })
-      .pipe(
-        tap((product) => {
-          if (user.role !== Role.Admin) {
-            if (product?.seller.id !== user.id)
-              throw new ForbiddenException(
-                'You cannot change a product that is not yours',
-              );
-            if (productDto && 'seller' in productDto)
-              throw new ForbiddenException(
-                'You cannot change the seller of a product',
-              );
-          }
-        }),
-      );
-  }
 
   @Get()
   findAll(
@@ -105,39 +82,24 @@ export class ProductsController {
 
   @Patch(':id')
   @Roles(Role.Admin, Role.Seller)
+  @UseGuards(SellerIntegrityGuard)
   updateOne(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @Req() req: Request,
   ) {
-    return this._checkSellerProductRelation(
-      id,
-      req.user,
-      updateProductDto,
-    ).pipe(
-      concatMap(() =>
-        this._productsService.updateOne({ where: { id } }, updateProductDto),
-      ),
-    );
+    return this._productsService.updateOne({ where: { id } }, updateProductDto);
   }
 
   @Delete(':id')
   @Roles(Role.Admin, Role.Seller)
-  removeOne(@Param('id') id: string, @Req() req: Request) {
-    return this._checkSellerProductRelation(id, req.user).pipe(
-      concatMap(() => {
-        return this._productsService.removeOne({ where: { id } }).pipe(
-          map(() => ({
-            result: HttpStatus.OK,
-            message: 'Product deleted',
-          })),
-        );
-      }),
-    );
+  @UseGuards(SellerIntegrityGuard)
+  removeOne(@Param('id') id: string) {
+    return this._productsService.removeOne({ where: { id } });
   }
 
   @Post(':id/image')
   @Roles(Role.Admin, Role.Seller)
+  @UseGuards(SellerIntegrityGuard)
   @UseInterceptors(
     FileInterceptor('image', {
       limits: { fileSize: MAX_FILE_SIZE },
@@ -147,26 +109,19 @@ export class ProductsController {
   uploadImage(
     @Param('id') productId: string,
     @UploadedFile() image: BufferedFile,
-    @Req() req: Request,
   ) {
     if (!image) throw new BadRequestException('Image is required');
 
-    return this._checkSellerProductRelation(productId, req.user).pipe(
-      concatMap(() => this._productsService.uploadImage(productId, image)),
-    );
+    return this._productsService.uploadImage(productId, image);
   }
 
   @Delete(':id/image/:imageId')
   @Roles(Role.Admin, Role.Seller)
+  @UseGuards(SellerIntegrityGuard)
   removeImage(
     @Param('id') productId: string,
     @Param('imageId') imageId: string,
-    @Req() req: Request,
   ) {
-    return this._checkSellerProductRelation(productId, req.user).pipe(
-      concatMap(() => {
-        return this._productsService.removeImage(productId, imageId);
-      }),
-    );
+    return this._productsService.removeImage(productId, imageId);
   }
 }
