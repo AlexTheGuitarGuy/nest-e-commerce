@@ -17,32 +17,47 @@ interface Entity {
   id: string;
 }
 
+type CrudRepositoryOptions<TExtra = {}> = {
+  entityName?: string;
+} & TExtra;
+
 interface CrudRepository<E> {
   findOne(
     findOptions: FindOneOptions<E>,
-    options?: unknown,
+    options: CrudRepositoryOptions,
   ): Observable<E | null>;
   findOneOrThrow(
     findOptions: FindOneOptions<E>,
-    options?: unknown,
+    options: CrudRepositoryOptions,
   ): Observable<E>;
-  findMany(findOptions: FindManyOptions<E>, options?: unknown): Observable<E[]>;
-  createOne(dto: DeepPartial<E>, options?: unknown): Observable<E>;
-  createMany(dtos: DeepPartial<E>[], options?: unknown): Observable<E>;
+  findMany(
+    findOptions: FindManyOptions<E>,
+    options: CrudRepositoryOptions,
+  ): Observable<E[]>;
+  createOne(dto: DeepPartial<E>, options: CrudRepositoryOptions): Observable<E>;
+  createMany(
+    dtos: DeepPartial<E>[],
+    options: CrudRepositoryOptions,
+  ): Observable<E>;
   updateOne(
     findOptions: FindOneOptions<E>,
     dto: QueryDeepPartialEntity<E>,
-    options?: unknown,
+    options: CrudRepositoryOptions,
   ): Observable<E>;
   updateMany(
     findOptions: FindManyOptions<E>,
     dto: QueryDeepPartialEntity<E>,
-    options?: unknown,
+    options: CrudRepositoryOptions,
   ): Observable<E[]>;
-  removeOne(findOptions: FindOneOptions<E>, options?: unknown): Observable<E>;
+  removeOne(
+    findOptions: FindOneOptions<E>,
+    options: CrudRepositoryOptions<{
+      softRemove?: boolean;
+    }>,
+  ): Observable<E>;
   removeMany(
     findOptions: FindOneOptions<E>,
-    options?: unknown,
+    options: CrudRepositoryOptions,
   ): Observable<E[]>;
 }
 
@@ -52,7 +67,10 @@ export class TypeormCrudRepository<E extends Entity>
 {
   constructor(private readonly repository: Repository<E>) {}
 
-  createOne(dto: DeepPartial<E>, entityName?: string): Observable<E> {
+  createOne(
+    dto: DeepPartial<E>,
+    { entityName }: CrudRepositoryOptions = {},
+  ): Observable<E> {
     const entity: E = this.repository.create(dto);
     return from(this.repository.save(entity)).pipe(
       catchError((error) => {
@@ -79,12 +97,18 @@ export class TypeormCrudRepository<E extends Entity>
 
   findOneOrThrow(
     findOptions: FindOneOptions<E>,
-    entityName?: string,
+    { entityName }: CrudRepositoryOptions = {},
   ): Observable<E> {
     return from(this.repository.findOne(findOptions)).pipe(
       map((entity) => {
-        if (!entity)
-          throw new NotFoundException(`${entityName || 'Entity'} not found`);
+        if (!entity) {
+          const titleCaseEntityName = !!entityName
+            ? entityName[0].toUpperCase() + entityName.slice(1).toLowerCase()
+            : undefined;
+          throw new NotFoundException(
+            `${titleCaseEntityName || 'Entity'} not found`,
+          );
+        }
 
         return entity;
       }),
@@ -98,12 +122,16 @@ export class TypeormCrudRepository<E extends Entity>
   updateOne(
     findOptions: FindOneOptions<E>,
     dto: QueryDeepPartialEntity<E>,
+    { entityName }: CrudRepositoryOptions = {},
   ): Observable<E> {
     return from(
-      this.findOneOrThrow({
-        where: findOptions.where,
-        select: { id: true } as FindOptionsSelect<E>,
-      }),
+      this.findOneOrThrow(
+        {
+          where: findOptions.where,
+          select: { id: true } as FindOptionsSelect<E>,
+        },
+        { entityName },
+      ),
     ).pipe(
       concatMap((entity) =>
         from(
@@ -111,10 +139,13 @@ export class TypeormCrudRepository<E extends Entity>
         ).pipe(map(() => entity)),
       ),
       concatMap((entity) =>
-        this.findOneOrThrow({
-          ...findOptions,
-          where: { id: entity.id } as FindOptionsWhere<E>,
-        }),
+        this.findOneOrThrow(
+          {
+            ...findOptions,
+            where: { id: entity.id } as FindOptionsWhere<E>,
+          },
+          { entityName },
+        ),
       ),
     );
   }
@@ -142,8 +173,14 @@ export class TypeormCrudRepository<E extends Entity>
     );
   }
 
-  removeOne(findOptions: FindOneOptions<E>, softRemove = true): Observable<E> {
-    return from(this.findOneOrThrow(findOptions)).pipe(
+  removeOne(
+    findOptions: FindOneOptions<E>,
+    {
+      entityName,
+      softRemove = true,
+    }: CrudRepositoryOptions<{ softRemove?: boolean }> = {},
+  ): Observable<E> {
+    return from(this.findOneOrThrow(findOptions, { entityName })).pipe(
       concatMap((entity) =>
         from(
           softRemove
@@ -156,7 +193,7 @@ export class TypeormCrudRepository<E extends Entity>
 
   removeMany(
     findOptions: FindOneOptions<E>,
-    softRemove = true,
+    { softRemove }: CrudRepositoryOptions<{ softRemove?: boolean }> = {},
   ): Observable<E[]> {
     return from(this.repository.find(findOptions)).pipe(
       concatMap((entities) =>
