@@ -1,5 +1,5 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Observable, from, map, concatMap, catchError } from 'rxjs';
+import { NotFoundException } from '@nestjs/common';
+import { Observable, from, map, concatMap } from 'rxjs';
 import {
   DeepPartial,
   FindManyOptions,
@@ -11,15 +11,12 @@ import {
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { LogMethods } from '../decorators/logging.decorator';
-import { PostgresErrorCode } from '../enums/postgres-error-code.enum';
 
 interface Entity {
   id: string;
 }
 
-type CrudRepositoryOptions<TExtra = {}> = {
-  entityName?: string;
-} & TExtra;
+type CrudRepositoryOptions<TExtra = {}> = {} & TExtra;
 
 interface CrudRepository<E> {
   findOne(
@@ -66,22 +63,19 @@ export class TypeormCrudRepository<E extends Entity>
   implements CrudRepository<E>
 {
   constructor(private readonly repository: Repository<E>) {}
+  private _entityName?: string;
 
-  createOne(
-    dto: DeepPartial<E>,
-    { entityName }: CrudRepositoryOptions = {},
-  ): Observable<E> {
+  public set entityName(entityName: string) {
+    this._entityName = entityName;
+  }
+
+  public get entityName() {
+    return this._entityName || 'entity';
+  }
+
+  createOne(dto: DeepPartial<E>): Observable<E> {
     const entity: E = this.repository.create(dto);
-    return from(this.repository.save(entity)).pipe(
-      catchError((error) => {
-        if (error?.code === PostgresErrorCode.UniqueViolation) {
-          throw new BadRequestException(
-            `This ${entityName || 'entity'} already exists`,
-          );
-        }
-        throw error;
-      }),
-    );
+    return from(this.repository.save(entity));
   }
 
   createMany(dtos: DeepPartial<E>[]): Observable<E> {
@@ -95,15 +89,13 @@ export class TypeormCrudRepository<E extends Entity>
     return from(this.repository.findOne(findOptions));
   }
 
-  findOneOrThrow(
-    findOptions: FindOneOptions<E>,
-    { entityName }: CrudRepositoryOptions = {},
-  ): Observable<E> {
+  findOneOrThrow(findOptions: FindOneOptions<E>): Observable<E> {
     return from(this.repository.findOne(findOptions)).pipe(
       map((entity) => {
         if (!entity) {
-          const titleCaseEntityName = !!entityName
-            ? entityName[0].toUpperCase() + entityName.slice(1).toLowerCase()
+          const titleCaseEntityName = !!this.entityName
+            ? this.entityName[0].toUpperCase() +
+              this.entityName.slice(1).toLowerCase()
             : undefined;
           throw new NotFoundException(
             `${titleCaseEntityName || 'Entity'} not found`,
@@ -122,16 +114,12 @@ export class TypeormCrudRepository<E extends Entity>
   updateOne(
     findOptions: FindOneOptions<E>,
     dto: QueryDeepPartialEntity<E>,
-    { entityName }: CrudRepositoryOptions = {},
   ): Observable<E> {
     return from(
-      this.findOneOrThrow(
-        {
-          where: findOptions.where,
-          select: { id: true } as FindOptionsSelect<E>,
-        },
-        { entityName },
-      ),
+      this.findOneOrThrow({
+        where: findOptions.where,
+        select: { id: true } as FindOptionsSelect<E>,
+      }),
     ).pipe(
       concatMap((entity) =>
         from(
@@ -139,13 +127,10 @@ export class TypeormCrudRepository<E extends Entity>
         ).pipe(map(() => entity)),
       ),
       concatMap((entity) =>
-        this.findOneOrThrow(
-          {
-            ...findOptions,
-            where: { id: entity.id } as FindOptionsWhere<E>,
-          },
-          { entityName },
-        ),
+        this.findOneOrThrow({
+          ...findOptions,
+          where: { id: entity.id } as FindOptionsWhere<E>,
+        }),
       ),
     );
   }
@@ -175,12 +160,9 @@ export class TypeormCrudRepository<E extends Entity>
 
   removeOne(
     findOptions: FindOneOptions<E>,
-    {
-      entityName,
-      softRemove = true,
-    }: CrudRepositoryOptions<{ softRemove?: boolean }> = {},
+    { softRemove = true }: CrudRepositoryOptions<{ softRemove?: boolean }> = {},
   ): Observable<E> {
-    return from(this.findOneOrThrow(findOptions, { entityName })).pipe(
+    return from(this.findOneOrThrow(findOptions)).pipe(
       concatMap((entity) =>
         from(
           softRemove

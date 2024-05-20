@@ -16,6 +16,7 @@ export class ImagesService extends TypeormCrudRepository<ImageEntity> {
   ) {
     super(_imagesRepository);
     this._imagesRepository;
+    this.entityName = 'image';
   }
 
   createOneWithMinio(productId: string, image: BufferedFile) {

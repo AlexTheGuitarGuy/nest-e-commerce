@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Observable, from, concatMap, map, of } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -18,6 +14,7 @@ export class UsersService extends TypeormCrudRepository<UserEntity> {
     private readonly _usersRepository: Repository<UserEntity>,
   ) {
     super(_usersRepository);
+    this.entityName = 'user';
   }
 
   createOneWithPassword(createUserDto: CreateUserDto): Observable<UserEntity> {
@@ -48,11 +45,9 @@ export class UsersService extends TypeormCrudRepository<UserEntity> {
   markEmailAsConfirmed(email: string): Observable<UserEntity> {
     return from(this.findOneOrThrow({ where: { email } })).pipe(
       map((foundUser) => {
-        if (!foundUser) {
-          throw new NotFoundException(`User with email ${email} not found`);
-        } else if (foundUser.isEmailConfirmed) {
+        if (foundUser.isEmailConfirmed)
           throw new BadRequestException('Email already confirmed');
-        }
+
         return foundUser;
       }),
       concatMap((foundUser) => {

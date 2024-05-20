@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { BadRequestException, HttpException } from '@nestjs/common';
 import { Request } from 'express';
 import {
   AppMimeType,
@@ -12,20 +12,14 @@ export const ImageFileFilter = (
 ) => {
   if (!isAppMimeType(file.mimetype)) {
     callback(
-      new HttpException(
-        'Only png or jpeg images are allowed',
-        HttpStatus.BAD_REQUEST,
-      ),
+      new BadRequestException('Only png or jpeg images are allowed'),
       false,
     );
     return void 0;
   }
 
   if (!file.originalname.match(/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i)) {
-    callback(
-      new HttpException('Only image are allowed', HttpStatus.BAD_REQUEST),
-      false,
-    );
+    callback(new BadRequestException('Only image are allowed'), false);
     return void 0;
   }
 

@@ -16,6 +16,7 @@ export class ProductsService extends TypeormCrudRepository<ProductEntity> {
   ) {
     super(_productsRepository);
     this._productsRepository;
+    this.entityName = 'product';
   }
 
   uploadImage(productId: string, image: BufferedFile) {

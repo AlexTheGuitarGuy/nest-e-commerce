@@ -1,4 +1,4 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { MinioService, MinioClient } from 'nestjs-minio-client';
 import { BufferedFile } from '../models/file.model';
 import * as crypto from 'crypto';
@@ -23,7 +23,7 @@ export class MinioClientService {
   ): Observable<{ url: string; fileName: string }> {
     this.logger.log('uploading file: ', file.originalname);
     if (!(file.mimetype.includes('jpeg') || file.mimetype.includes('png'))) {
-      throw new HttpException('Error uploading file', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('Error uploading file');
     }
     let temp_filename = Date.now().toString();
     let hashedFileName = crypto
@@ -45,11 +45,7 @@ export class MinioClientService {
       file.size,
       metaData,
       function (err) {
-        if (err)
-          throw new HttpException(
-            'Error uploading file',
-            HttpStatus.BAD_REQUEST,
-          );
+        if (err) throw new BadRequestException('Error uploading file');
       },
     );
 
@@ -65,11 +61,7 @@ export class MinioClientService {
   ): Observable<void> {
     this.logger.log('deleting file: ', objetName);
     this.client.removeObject(baseBucket, objetName, function (err) {
-      if (err)
-        throw new HttpException(
-          'Oops Something wrong happend',
-          HttpStatus.BAD_REQUEST,
-        );
+      if (err) throw new BadRequestException('Oops Something wrong happend');
     });
     return of(void 0);
   }
