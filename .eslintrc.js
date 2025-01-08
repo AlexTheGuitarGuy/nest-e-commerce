@@ -12,7 +12,6 @@ module.exports = {
     'airbnb-base',
     'airbnb-typescript/base',
     'plugin:jest/recommended',
-    'plugin:sonarjs/recommended',
     'plugin:@typescript-eslint/strict-type-checked',
     'plugin:@typescript-eslint/stylistic-type-checked',
     'plugin:prettier/recommended',

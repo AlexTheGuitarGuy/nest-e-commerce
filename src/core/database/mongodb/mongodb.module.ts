@@ -10,13 +10,25 @@ import Joi from '@hapi/joi';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: () => {
+        const {
+          MONGO_URI,
+          MONGO_HOST,
+          MONGO_DATABASE,
+          MONGO_USER,
+          MONGO_USER_PASSWORD,
+          MONGO_PORT,
+        } = process.env;
+        const uri = `${MONGO_URI}://${MONGO_USER}:${MONGO_USER_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DATABASE}`;
         const mongooseOptions: MongooseModuleFactoryOptions = Joi.object({
           uri: Joi.string().required(),
           dbName: Joi.string().required(),
         }).validate({
-          uri: process.env.MONGODB_URI,
+          uri,
           dbName: 'main',
-        }).value;
+        }).value as {
+          uri: string;
+          dbName: string;
+        };
 
         return mongooseOptions;
       },
