@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm:postgres": "typeorm-ts-node-commonjs -d ./src/core/database/postgres/data-source.ts"
+    "typeorm:postgres": "typeorm-ts-node-commonjs -d ./src/core/database/postgres/data-source.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",

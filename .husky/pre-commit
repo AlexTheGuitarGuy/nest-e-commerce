@@ -1,8 +1,11 @@
 #!/bin/bash
 
-echo "running pre-commit hook"
-if grep -E "EMAIL_PASS=.+" docker/container.env; then
-  echo "Error: EMAIL_PASS found in docker/container.env. Remove sensitive information before committing."
+# Define a variable with the patterns to exclude
+EXCLUDE_PATTERNS="EMAIL_PASS=.+|PAYPAL_CLIENT_SECRET=.+"
+
+# Check if any of the patterns are found in docker/container.env
+if grep -E "$EXCLUDE_PATTERNS" docker/container.env; then
+  echo "Error: Sensitive information found in docker/container.env. Remove before committing."
   exit 1
 fi
 
