@@ -12,7 +12,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(username: string, password: string): Promise<UserDto> {
-    return await firstValueFrom(
+    return firstValueFrom(
       this._authService.validateUser(username, password).pipe(
         map((user) => {
           if (!user) throw new UnauthorizedException();

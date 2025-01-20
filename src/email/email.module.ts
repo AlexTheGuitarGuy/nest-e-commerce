@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { EmailService } from './services/email.service';
 import { ConfigModule } from '@nestjs/config';
 import Joi from '@hapi/joi';
+import { EmailService } from './services/email.service';
 
 @Module({
   providers: [EmailService],

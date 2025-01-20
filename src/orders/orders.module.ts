@@ -1,17 +1,17 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { OrdersService } from './services/orders.service';
 import { CartModule } from 'src/cart/cart.module';
 import * as paypal from 'paypal-rest-sdk';
 import { UsersModule } from 'src/users/users.module';
-import { OrdersController } from './controllers/orders.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Payment, PaymentSchema } from './entities/payment.schema';
 import Joi from '@hapi/joi';
 import { EmailModule } from 'src/email/email.module';
 import { EmailConfirmationModule } from 'src/email-confirmation/email-confirmation.module';
 import { tenantConnectionProvider } from 'src/common/tenants/providers/tenant-connection.provider';
 import { tenantModels } from 'src/common/tenants/providers/tenant-models.provider';
 import { TenantsMiddleware } from 'src/common/tenants/middlewares/tenants.middleware';
+import { Payment, PaymentSchema } from './entities/payment.schema';
+import { OrdersController } from './controllers/orders.controller';
+import { OrdersService } from './services/orders.service';
 
 @Module({
   providers: [

@@ -10,9 +10,9 @@ import {
 } from 'class-validator';
 import { ProductCategory } from 'src/common/enums/product-category.enum';
 import { UserDto } from 'src/users/dto/user.dto';
+import { Expose } from 'class-transformer';
 import { ImageDto } from './image.dto';
 import { ProductEntity } from '../entities/product.entity';
-import { Expose } from 'class-transformer';
 
 type Fields = {
   [P in keyof ProductEntity]: ProductEntity[P];

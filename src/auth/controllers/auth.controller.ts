@@ -9,11 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { map, tap } from 'rxjs';
+import { EmailConfirmationBypassed } from 'src/email-confirmation/decorators/email-confirmation-bypassed.decorator';
 import { AuthService } from '../services/auth.service';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import { map, tap } from 'rxjs';
-import { EmailConfirmationBypassed } from 'src/email-confirmation/decorators/email-confirmation-bypassed.decorator';
 import { RegisterDto } from '../dto/register.dto';
 import { UpdatePasswordDto } from '../dto/update-password.dto';
 

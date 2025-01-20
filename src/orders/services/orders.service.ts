@@ -2,12 +2,12 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CartService } from 'src/cart/services/cart.service';
 import { concatMap, from, of, map, tap, Observable } from 'rxjs';
 import * as paypal from 'paypal-rest-sdk';
-import { Payment } from '../entities/payment.schema';
 import { Model } from 'mongoose';
 import { UserDto } from 'src/users/dto/user.dto';
 import { EmailService } from 'src/email/services/email.service';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 import { TenantModels } from 'src/common/tenants/providers/tenant-models.provider';
+import { Payment } from '../entities/payment.schema';
 
 @Injectable()
 export class OrdersService {

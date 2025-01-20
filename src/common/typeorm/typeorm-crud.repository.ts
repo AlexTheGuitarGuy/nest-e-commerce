@@ -63,6 +63,7 @@ export class TypeormCrudRepository<E extends Entity>
   implements CrudRepository<E>
 {
   constructor(private readonly repository: Repository<E>) {}
+
   private _entityName?: string;
 
   public set entityName(entityName: string) {
@@ -93,7 +94,7 @@ export class TypeormCrudRepository<E extends Entity>
     return from(this.repository.findOne(findOptions)).pipe(
       map((entity) => {
         if (!entity) {
-          const titleCaseEntityName = !!this.entityName
+          const titleCaseEntityName = this.entityName
             ? this.entityName[0].toUpperCase() +
               this.entityName.slice(1).toLowerCase()
             : undefined;

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ProductEntity } from '../entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { concatMap } from 'rxjs';
 import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
 import { TypeormCrudRepository } from 'src/common/typeorm/typeorm-crud.repository';
+import { ProductEntity } from '../entities/product.entity';
 import { ImagesService } from './images.service';
 
 @Injectable()

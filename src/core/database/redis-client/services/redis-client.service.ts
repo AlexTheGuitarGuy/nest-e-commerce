@@ -7,6 +7,7 @@ import { Observable, from } from 'rxjs';
 @Injectable()
 export class RedisClientService {
   private _redisClient: Redis;
+
   constructor() {
     this._redisClient = new Redis(
       Joi.object({

@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { RedisClientService } from 'src/core/database/redis-client/services/redis-client.service';
 import { UsersService } from 'src/users/services/users.service';
-import { CartDto } from '../dto/cart.dto';
 import { ProductsService } from 'src/products/services/products.service';
 import { ProductDto } from 'src/products/dto/product.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserDto } from 'src/users/dto/user.dto';
+import { CartDto } from '../dto/cart.dto';
 
 @Injectable()
 export class CartService {

@@ -10,9 +10,9 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { map } from 'rxjs';
-import { OrdersService } from '../services/orders.service';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 import { TenantIntegrityGuard } from 'src/common/tenants/guards/tenant-integrity.guard';
+import { OrdersService } from '../services/orders.service';
 
 @UseGuards(TenantIntegrityGuard)
 @Controller('orders')

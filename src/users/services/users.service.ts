@@ -3,9 +3,9 @@ import { Observable, from, concatMap, map, of } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
+import { TypeormCrudRepository } from 'src/common/typeorm/typeorm-crud.repository';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserEntity } from '../entities/user.entity';
-import { TypeormCrudRepository } from 'src/common/typeorm/typeorm-crud.repository';
 
 @Injectable()
 export class UsersService extends TypeormCrudRepository<UserEntity> {

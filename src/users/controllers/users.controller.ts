@@ -13,17 +13,17 @@ import {
   Query,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { UsersService } from '../services/users.service';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { UserDto } from '../dto/user.dto';
 import { Observable, map } from 'rxjs';
-import { UpdateUserDto } from '../dto/update-user.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { PageDto } from 'src/common/dto/page.dto';
 import { plainToInstance } from 'class-transformer';
 import { PageMetaDto } from 'src/common/dto/page-meta.dto';
 import { PageOptionsDto } from 'src/common/dto/page-options-dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import { UserDto } from '../dto/user.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UsersService } from '../services/users.service';
 
 @Controller('users')
 export class UsersController {

@@ -4,9 +4,9 @@ import dayjs from 'dayjs';
 import { Response } from 'express';
 
 import { EmailService } from 'src/email/services/email.service';
-import { VerificationTokenPayload } from '../interfaces/verification-token-payload';
 import { UserDto } from 'src/users/dto/user.dto';
 import { UsersService } from 'src/users/services/users.service';
+import { VerificationTokenPayload } from '../interfaces/verification-token-payload';
 
 @Injectable()
 export class EmailConfirmationService {

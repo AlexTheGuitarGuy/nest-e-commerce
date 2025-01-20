@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { TypeormCrudRepository } from 'src/common/typeorm/typeorm-crud.repository';
-import { ImageEntity } from '../entities/image.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MinioClientService } from 'src/core/database/minio-client/services/minio-client.service';
 import { concatMap } from 'rxjs';
 import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
+import { ImageEntity } from '../entities/image.entity';
 
 @Injectable()
 export class ImagesService extends TypeormCrudRepository<ImageEntity> {

@@ -9,3 +9,16 @@ if grep -E "$EXCLUDE_PATTERNS" docker/container.env; then
   exit 1
 fi
 
+# Run pnpm format and check for errors
+if ! pnpm format; then
+  echo "Error: Code formatting failed. Please fix the issues before committing."
+  exit 1
+fi
+
+# Run pnpm lint and check for errors
+# if ! pnpm lint; then
+#   echo "Error: Linting failed. Please fix the issues before committing."
+#   exit 1
+# fi
+
+echo "Pre-commit checks passed successfully."

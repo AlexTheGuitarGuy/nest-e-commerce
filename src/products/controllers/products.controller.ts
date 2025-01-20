@@ -15,9 +15,6 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { PageOptionsDto } from 'src/common/dto/page-options-dto';
-import { ProductsService } from '../services/products.service';
-import { ProductDto } from '../dto/product.dto';
-import { CreateProductDto } from '../dto/create-product.dto';
 import { plainToInstance } from 'class-transformer';
 import { Observable, map } from 'rxjs';
 import { PageDto } from 'src/common/dto/page.dto';
@@ -25,10 +22,13 @@ import { PageMetaDto } from 'src/common/dto/page-meta.dto';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UpdateProductDto } from '../dto/update-product.dto';
 import { ImageFileFilter } from 'src/common/filters/image-file.filter';
 import { MAX_FILE_SIZE } from 'src/common/constants';
 import { BufferedFile } from 'src/core/database/minio-client/models/file.model';
+import { UpdateProductDto } from '../dto/update-product.dto';
+import { CreateProductDto } from '../dto/create-product.dto';
+import { ProductDto } from '../dto/product.dto';
+import { ProductsService } from '../services/products.service';
 import { SellerIntegrityGuard } from '../guards/seller-integrity.guard';
 
 @Controller('products')

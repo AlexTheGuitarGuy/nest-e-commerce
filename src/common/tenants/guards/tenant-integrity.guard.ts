@@ -11,7 +11,7 @@ export class TenantIntegrityGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const user = context.switchToHttp().getRequest().user;
+    const { user } = context.switchToHttp().getRequest();
     const tenantId = context.switchToHttp().getRequest().headers['x-tenant-id'];
 
     if (!user || !tenantId)

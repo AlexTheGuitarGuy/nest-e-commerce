@@ -1,11 +1,11 @@
 import { Controller, Post, Query, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { EmailConfirmationService } from '../services/email-confirmation.service';
 import { UserDto } from 'src/users/dto/user.dto';
 import { map } from 'rxjs';
-import { EmailConfirmationBypassed } from '../decorators/email-confirmation-bypassed.decorator';
 import { plainToInstance } from 'class-transformer';
 import { UsersService } from 'src/users/services/users.service';
+import { EmailConfirmationBypassed } from '../decorators/email-confirmation-bypassed.decorator';
+import { EmailConfirmationService } from '../services/email-confirmation.service';
 
 @Controller('email-confirmation')
 export class EmailConfirmationController {

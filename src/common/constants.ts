@@ -32,4 +32,3 @@ export const INTERNAL_PARAMETERS = [
   'created_by',
   'updated_by',
 ];
-

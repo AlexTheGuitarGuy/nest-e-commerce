@@ -7,11 +7,11 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { Response } from 'express';
 import dayjs from 'dayjs';
-import { RegisterDto } from '../dto/register.dto';
 import { Role } from 'src/common/enums/role.enum';
-import { UpdatePasswordDto } from '../dto/update-password.dto';
 import { EmailConfirmationService } from 'src/email-confirmation/services/email-confirmation.service';
 import * as bcrypt from 'bcrypt';
+import { UpdatePasswordDto } from '../dto/update-password.dto';
+import { RegisterDto } from '../dto/register.dto';
 
 @Injectable()
 export class AuthService {

@@ -1,6 +1,5 @@
 import { ProductCategory } from 'src/common/enums/product-category.enum';
 import { UserEntity } from 'src/users/entities/user.entity';
-import { ImageEntity } from './image.entity';
 import {
   Check,
   Column,
@@ -10,6 +9,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ImageEntity } from './image.entity';
 
 @Entity()
 export class ProductEntity {

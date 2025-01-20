@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from 'src/users/users.module';
+import { EmailModule } from 'src/email/email.module';
+import { APP_GUARD } from '@nestjs/core';
 import { EmailConfirmationService } from './services/email-confirmation.service';
 import { EmailConfirmationController } from './controllers/email-confirmation.controller';
-import { EmailModule } from 'src/email/email.module';
 import { EmailConfirmationGuard } from './guards/email-confirmation.guard';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   providers: [

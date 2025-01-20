@@ -9,10 +9,10 @@ import {
 } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
 import { ProductDto } from 'src/products/dto/product.dto';
-import { UserEntity } from '../entities/user.entity';
 import { randomUUID } from 'crypto';
 import { ApiProperty } from '@nestjs/swagger';
 import { PasswordField } from 'src/common/decorators/password-field.decorator';
+import { UserEntity } from '../entities/user.entity';
 
 type Fields = {
   [P in keyof UserEntity]: UserEntity[P];
